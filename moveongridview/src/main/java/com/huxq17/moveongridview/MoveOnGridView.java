@@ -9,10 +9,12 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ListAdapter;
+import android.widget.TextView;
 
 public class MoveOnGridView extends GridView implements AdapterView.OnItemLongClickListener {
     public MoveOnGridView(Context context) {
@@ -27,6 +29,35 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private void init(Context context) {
         setChildrenDrawingOrderEnabled(true);
         super.setOnItemLongClickListener(this);
+        setOnScrollListener(new OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                View firstChild = getChildAt(0);
+                if (firstChild != null) {
+                    mFirstTop = firstChild.getTop();
+                    mFirstLeft = firstChild.getLeft();
+                    mColumnsNum = getNumColumns();
+                    int rowLine = firstVisibleItem / mColumnsNum;
+                    mScrollY = mFirstTop - rowLine * (mVerticalSpacing + mRowHeight);
+                    mVisibleItemCount = visibleItemCount;
+                }
+            }
+
+        });
+    }
+
+    private int mScrollY;
+    private int mFirstTop, mFirstLeft;
+    private int mVisibleItemCount;
+
+    @Override
+    public void onTouchModeChanged(boolean isInTouchMode) {
+        super.onTouchModeChanged(isInTouchMode);
     }
 
     private float mLastX, mLastY;
@@ -46,7 +77,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     public int getDragPosition() {
-        return mAdapter.getPositionForView(mDragedView);
+        return mDragPosition;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -54,14 +85,13 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     public boolean onTouchEvent(MotionEvent ev) {
         int currDraggedPosition = pointToPosition((int) ev.getX(), (int) ev.getY());
 
+        log("ontouch currDraggedPosition=" + currDraggedPosition);
         mColumnWidth = getChildAt(0).getWidth();
         mRowHeight = getChildAt(0).getHeight();
         mHorizontalSpacing = getHorizontalSpacing();
         mVerticalSpacing = getVerticalSpacing();
-        mColumnsNum = getNumColumns();
         Rect dragFrame = new Rect();
         getChildAt(0).getHitRect(dragFrame);
-        log("ontouch currDraggedPosition=" + currDraggedPosition + "; top=" + dragFrame.top);
         int action = ev.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
@@ -76,6 +106,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                     mDragedView.offsetTopAndBottom(deltaY);
                     if (currDraggedPosition == INVALID_POSITION) return super.onTouchEvent(ev);
                     int dragPosition = getDragPosition();
+                    log("dragPosition=" + dragPosition + ";currDraggedPosition=" + currDraggedPosition);
                     if (currDraggedPosition != dragPosition) {
                         getChildAt(currDraggedPosition - getFirstVisiblePosition()).getGlobalVisibleRect(mDragedRect);
                         if (currDraggedPosition < dragPosition) {
@@ -87,7 +118,8 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                                 translateItem(i, i - 1);
                             }
                         }
-                        mAdapter.setPositionForView(mDragedView, currDraggedPosition);
+                        mAdapter.setViewForPosition(currDraggedPosition, mDragedView);
+                        mDragPosition = currDraggedPosition;
                     }
                 }
                 mLastX = ev.getRawX();
@@ -105,20 +137,42 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private void translateItem(int from, int to) {
         int fromIndex = from - getFirstVisiblePosition();
         int toIndex = to - getFirstVisiblePosition();
-        View fromView = getChildAt(fromIndex);
-        View toView = getChildAt(toIndex);
-        int horizontalSpacing = getHorizontalSpacing();
-        int verticalSpacing = getVerticalSpacing();
-        int columnWidth = getColumnWidth();
-        int fromX = fromView.getLeft();
-        int fromY = fromView.getTop();
-        int offsetX = (to - from) % mColumnsNum * mColumnWidth;
-        int offsetY = (to - from) / mColumnsNum * mRowHeight;
-        int toX = offsetX + fromX;
-        int toY = offsetY + fromY;
+        View fromView = mAdapter.getViewForPosition(from);
+        int[] froms = getLeftAndTopForPosition(from);
+        int[] tos = getLeftAndTopForPosition(to);
+        int offsetX = tos[0] - froms[0];
+        int offsetY = tos[1] - froms[1];
+        log("translateItem from=" + from + ";offsetX=" + offsetX + ";offsetY=" + offsetY);
         fromView.offsetLeftAndRight(offsetX);
         fromView.offsetTopAndBottom(offsetY);
-        mAdapter.setPositionForView(fromView, to);
+        TextView textView = (TextView) fromView;
+//        textView.setText("position="+from);
+        mAdapter.setViewForPosition(to, fromView);
+    }
+
+    public int[] getLeftAndTopForPosition(int position) {
+        int[] lt = new int[2];
+        int m = position % mColumnsNum;
+        int n = position / mColumnsNum;
+        int left = mFirstLeft + m * (mColumnWidth + mHorizontalSpacing);
+        int top = mFirstTop + n * (mRowHeight + mVerticalSpacing);
+        lt[0] = left;
+        lt[1] = top;
+        return lt;
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+    }
+
+    @Override
+    protected void layoutChildren() {
+        super.layoutChildren();
+        int childCount = getChildCount();
+        for(int i=0;i<childCount;i++){
+            
+        }
     }
 
     private Rect mTouchFrame;
@@ -126,25 +180,40 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     @Override
     public int pointToPosition(int x, int y) {
-        int firstPosition = getFirstVisiblePosition();
         if (mTouchFrame == null) {
             mTouchFrame = new Rect();
         }
-        final int count = getChildCount();
-        for (int i = count - 1; i >= 0; i--) {
-            final View child = getChildAt(i);
-            if (child.getVisibility() == View.VISIBLE && child != mDragedView) {
-                child.getHitRect(mTouchFrame);
-                if (mTouchFrame.contains(x, y)) {
-                    return mAdapter.getPositionForView(child);
+        try {
+            int m = (x - mFirstLeft) / (mColumnWidth + mHorizontalSpacing);
+            int n = (y - mFirstTop) / (mRowHeight + mVerticalSpacing);
+            int right = mFirstLeft + m * (mColumnWidth + mHorizontalSpacing) + mColumnWidth;
+            int bottom = mFirstTop + n * (mRowHeight + mVerticalSpacing) + mRowHeight;
+            if (x > right || y > bottom) {
+                return INVALID_POSITION;
+            } else {
+                int result = n * mColumnsNum + m + getFirstVisiblePosition();
+                if (result <= getLastVisiblePosition()) {
+                    return n * mColumnsNum + m + getFirstVisiblePosition();
+                } else {
+                    return INVALID_POSITION;
                 }
             }
+        } catch (Exception e) {
+
         }
-        getGlobalVisibleRect(mRect);
-        log("mDragedView != null mDragedRect=" + mDragedRect.toShortString() + ";x + getLeft()=" + (x + getLeft()) + ";y=" + (y + mRect.top));
-        if (mDragedView != null && mDragedRect.contains(x + getLeft(), y + mRect.top)) {
-            return mAdapter.getPositionForView(mDragedView);
-        }
+//        for (int i = 0; i < mVisibleItemCount; i++) {
+//            final int firstTop = mFirstTop;
+//            final int firstLeft = mFirstLeft;
+//            int row = i / mColumnsNum;
+//            int column = i % mColumnsNum;
+//            int left = firstLeft + column * (mColumnWidth + mHorizontalSpacing);
+//            int top = firstTop + row * (mRowHeight + mVerticalSpacing);
+//            mTouchFrame.set(left, top, left + mColumnWidth, top + mRowHeight);
+//            if (mTouchFrame.contains(x, y)) {
+//                log("pointToPosition position=" + (i + getFirstVisiblePosition()) );
+//                return i + getFirstVisiblePosition();
+//            }
+//        }
         return INVALID_POSITION;
     }
 
@@ -158,18 +227,18 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private int mColumnWidth, mRowHeight, mColumnsNum;
     private int mHorizontalSpacing;
     private int mVerticalSpacing;
+    private int mDragPosition;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        log("onItemLongClick");
         view.getGlobalVisibleRect(mDragedRect);
         int top = mDragedRect.top;
         int left = mDragedRect.left;
 //        int[] l1 = new int[2];
 //        view.getLocationOnScreen(l1);
-        log("left=" + left + ";top=" + top + "\n;" + "mColumnWidth=" + mColumnWidth + ";mRowHeight=" + mRowHeight);
-
+        mDragPosition = position;
+        log("onItemLongClick mDragPosition=" + mDragPosition);
         view.setScaleX(1.2f);
         view.setScaleY(1.2f);
         view.setAlpha(0.6f);
@@ -178,6 +247,8 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
         return true;
     }
+
+    private int totalScroll;
 
     @Override
     protected int getChildDrawingOrder(int childCount, int i) {

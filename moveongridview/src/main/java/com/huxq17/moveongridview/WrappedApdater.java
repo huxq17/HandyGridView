@@ -7,14 +7,13 @@ import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 
 import java.util.HashMap;
 
 public class WrappedApdater extends BaseAdapter {
     private BaseAdapter mRealApdater;
-    private HashMap<View, Integer> mItems;
+    private HashMap<Integer, View> mItems;
 
     WrappedApdater(BaseAdapter realApdater) {
         mRealApdater = realApdater;
@@ -39,20 +38,32 @@ public class WrappedApdater extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = mRealApdater.getView(position, convertView, parent);
-        mItems.put(view, position);
+       View itemView = mItems.get(position);
+        int hashcode = -1;
+        if(itemView!=null){
+            hashcode = mItems.get(position).hashCode();
+        }
+        Log.e("tag", "getView position =" + position+"view="+view.hashCode()+";itemview="+hashcode+";convertView="+convertView);
+        if(convertView!=null){
+            Log.e("tag", "getView convertView="+convertView.hashCode());
+        }
+        mItems.put(position, view);
         return view;
     }
 
-    public int getPositionForView(View view) {
-        Integer position = mItems.get(view);
-        if(position==null){
-            Log.e("tag","getPositionForView view="+view);
+    public View getViewForPosition(int position) {
+        View view = mItems.get(position);
+//        for(Map.Entry<Integer,View> items:mItems.entrySet()){
+//            Log.e("tag", "getViewForPosition  position =" + items.getKey()+";view="+items.getValue());
+//        }
+        if (view == null) {
+            Log.e("tag", "getViewForPosition have not found view for position =" + position);
         }
-        return position == null ? AdapterView.INVALID_POSITION : position;
+        return view;
     }
 
-    public void setPositionForView(View view, int position) {
-        mItems.put(view, position);
+    public void setViewForPosition(int position, View view) {
+        mItems.put(position, view);
     }
 
     @Override
