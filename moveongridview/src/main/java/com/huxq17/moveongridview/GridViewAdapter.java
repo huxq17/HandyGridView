@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
-public class GridViewAdapter extends BaseAdapter {
+public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener {
     private Context context;
     private List<String> mDatas;
 
@@ -47,5 +47,11 @@ public class GridViewAdapter extends BaseAdapter {
         }
         textView.setText(getItem(position));
         return convertView;
+    }
+
+    @Override
+    public void onItemMoved(int from, int to) {
+        String s = mDatas.remove(from);
+        mDatas.add(to, s);
     }
 }

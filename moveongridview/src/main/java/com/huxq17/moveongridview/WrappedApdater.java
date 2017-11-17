@@ -38,23 +38,24 @@ public class WrappedApdater extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = mRealApdater.getView(position, convertView, parent);
-       View itemView = mItems.get(position);
-        int hashcode = -1;
-        if(itemView!=null){
-            hashcode = mItems.get(position).hashCode();
-        }
-        Log.e("tag", "getView position =" + position+"view="+view.hashCode()+";itemview="+hashcode+";convertView="+convertView);
-        if(convertView!=null){
-            Log.e("tag", "getView convertView="+convertView.hashCode());
-        }
-        mItems.put(position, view);
+//       View itemView = mItems.get(position);
+//        int hashcode = -1;
+//        if(itemView!=null){
+//            hashcode = mItems.get(position).hashCode();
+//        }
+////        Log.e("tag", "getView position =" + position+"view="+view.hashCode()+";itemview="+hashcode+";convertView="+convertView);
+//        if(convertView!=null){
+////            Log.e("tag", "getView convertView="+convertView.hashCode());
+//        }
+//        mItems.put(position, view);
         return view;
     }
 
     public View getViewForPosition(int position) {
         View view = mItems.get(position);
-//        for(Map.Entry<Integer,View> items:mItems.entrySet()){
-//            Log.e("tag", "getViewForPosition  position =" + items.getKey()+";view="+items.getValue());
+
+//        for (Map.Entry<Integer, View> items : mItems.entrySet()) {
+//            Log.e("tag", "getViewForPosition  position =" + items.getKey() + ";view=" + items.getValue().hashCode());
 //        }
         if (view == null) {
             Log.e("tag", "getViewForPosition have not found view for position =" + position);
