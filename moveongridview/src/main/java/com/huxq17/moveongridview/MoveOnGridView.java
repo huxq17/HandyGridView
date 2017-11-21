@@ -6,7 +6,6 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,8 +23,11 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private int mVisibleItemCount;
     private int mFirstVisibleFirstItem = -1;
     private float mLastX, mLastY;
-    private boolean mHasLayouted = false;
-    private FixedQueue<View> mChildren = new FixedQueue<>();
+    private FixedQueue<Item> mChildren = new FixedQueue<>();
+
+    private int mTouchSlop;
+    private OnItemLongClickListener mOnItemLongClickListener;
+    private OnScrollListener mOnScrollListener;
 
     public MoveOnGridView(Context context) {
         this(context, null);
@@ -36,20 +38,26 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         init(context);
     }
 
-    private int mTouchSlop;
-
     @Override
     public void setOnItemLongClickListener(OnItemLongClickListener listener) {
-        throw new UnsupportedOperationException("setOnItemLongClickListener(OnItemLongClickListener) is not supported in " + getClass().getSimpleName());
+        mOnItemLongClickListener = listener;
+    }
+
+    @Override
+    public void setOnScrollListener(OnScrollListener l) {
+        mOnScrollListener = l;
     }
 
     private void init(Context context) {
         setChildrenDrawingOrderEnabled(true);
         super.setOnItemLongClickListener(this);
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        setOnScrollListener(new OnScrollListener() {
+        super.setOnScrollListener(new OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
+                if (mOnScrollListener != null) {
+                    mOnScrollListener.onScrollStateChanged(view, scrollState);
+                }
             }
 
             @Override
@@ -58,8 +66,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                     if (mFirstVisibleFirstItem == -1) {
                         mFirstVisibleFirstItem = firstVisibleItem;
                         mVisibleItemCount = visibleItemCount;
-                        onGridViewLayouted();
-                        mHasLayouted = true;
+                        onGridViewVisible();
                     } else {
                         int rowLine = firstVisibleItem / mColumnsNum;
                         View firstChild = getChildAt(0);
@@ -80,28 +87,19 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                         mFirstVisibleFirstItem = firstVisibleItem;
                         mVisibleItemCount = visibleItemCount;
                     }
+                    if (mOnScrollListener != null) {
+                        mOnScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
+                    }
                 }
             }
         });
     }
 
-    @Override
-    public void invalidate() {
-        super.invalidate();
-//        log("invalidate");
-    }
-
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    public void onGridViewLayouted() {
+    public void onGridViewVisible() {
         mHorizontalSpacing = getHorizontalSpacing();
         mVerticalSpacing = getVerticalSpacing();
         mColumnsNum = getNumColumns();
-
-//        refreshChildren();
-    }
-
-    public boolean hasGridViewLayouted() {
-        return mHasLayouted;
     }
 
     private WrappedApdater mAdapter;
@@ -129,36 +127,12 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         return super.addViewInLayout(child, index, params, preventRequestLayout);
     }
 
-    @Override
-    protected void detachViewsFromParent(int start, int count) {
-        super.detachViewsFromParent(start, count);
-        int childCount = mChildren.size();
-
-        if (start == 0) {
-            for (int i = start; i < start + count; i++) {
-                mChildren.poll();
-            }
-        } else {
-            for (int i = start; i > start - count; i--) {
-                mChildren.pollLast();
-            }
-        }
-
-        log("detachViewsFromParent start=" + start + ";count=" + count + "; size=" + mChildren.size() + ";childCount=" + getChildCount());
-    }
-
-    @Override
-    protected void attachViewToParent(View child, int index, ViewGroup.LayoutParams params) {
-        super.attachViewToParent(child, index, params);
-//        log("attachViewToParent");
-    }
-
     private void refreshChildren() {
         int childCount = getChildCount();
         log("refreshChildren count = " + childCount);
-        mChildren.clear();
+        clearAllChildren();
         for (int i = 0; i < childCount; i++) {
-            mChildren.add(getChildAt(i));
+            addChild(i, getChildAt(i));
         }
     }
 
@@ -176,24 +150,97 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     @Override
+    public boolean dispatchDragEvent(DragEvent event) {
+        return super.dispatchDragEvent(event);
+    }
+
+    @Override
+    protected void detachViewsFromParent(int start, int count) {
+        super.detachViewsFromParent(start, count);
+        log("detachViewsFromParent");
+        if (start == 0) {
+            for (int i = start; i < start + count; i++) {
+//                mChildren.poll();
+                removeChild(0);
+            }
+        } else {
+            start = mChildren.size() - 1;
+            for (int i = start; i > start - count; i--) {
+//                mChildren.pollLast();
+                removeChild(i);
+            }
+        }
+        log("detachViewsFromParent start=" + start + ";count=" + count + "; size=" + mChildren.size() + ";childCount=" + getChildCount());
+    }
+
+    @Override
+    protected void attachViewToParent(View child, int index, ViewGroup.LayoutParams params) {
+        super.attachViewToParent(child, index, params);
+        addChild(index, child);
+    }
+
+    @Override
+    protected void detachAllViewsFromParent() {
+        super.detachAllViewsFromParent();
+        clearAllChildren();
+    }
+
+    @Override
     public void onViewAdded(View child) {
         super.onViewAdded(child);
         int index = indexOfChild(child);
-//        refreshChild(child);
-        mChildren.add(index, child);
-        log("onViewAdd size=" + mChildren.size() + ";position=" + index + ";childCount=" + getChildCount());
+        addChild(index, child);
     }
 
     @Override
     public void onViewRemoved(View child) {
         super.onViewRemoved(child);
-        mChildren.remove(child);
-        log("onViewRemoved mChildren.size=" + mChildren.size());
+        log("onViewRemoved");
+        removeChild(child);
     }
 
-    @Override
-    public boolean dispatchDragEvent(DragEvent event) {
-        return super.dispatchDragEvent(event);
+    private void clearAllChildren() {
+        mChildren.clear();
+        log("detachAllViewsFromParent childcount=" + getChildCount());
+    }
+
+    private void addChild(int index, View child) {
+        if (index < 0) {
+            index = mChildren.size();
+        }
+        Item item = new Item(child);
+        mChildren.add(index, item);
+        log("addChild index=" + index + ";mChildren.size=" + mChildren.size() + ";childCount=" + getChildCount());
+    }
+
+    private boolean removeChild(View child) {
+        boolean result = false;
+        int childSize = mChildren.size();
+        for (int i = 0; i < childSize; i++) {
+            Item childitem = mChildren.get(i);
+            if (childitem.view == child) {
+                result = mChildren.remove(childitem);
+                break;
+            }
+        }
+//        for (Item childitem : mChildren) {
+//            if (childitem.view == child) {
+//                result = mChildren.remove(childitem);
+//                break;
+//            }
+//        }
+        log("removeChild mChildren.size=" + mChildren.size() + ";child=" + child + ";removeResult=" + result);
+        return result;
+    }
+
+    private void removeChild(int index) {
+        mChildren.remove(index);
+        log("removeChild mindex=" + index + ";mChild.size=" + mChildren.size());
+    }
+
+    private View getChildFrom(int index) {
+        Item item = mChildren.get(index);
+        return item == null ? null : item.view;
     }
 
     @Override
@@ -253,7 +300,8 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private void swapItem(int from, int to) {
         int fromIndex = from - getFirstVisiblePosition();
         int toIndex = to - getFirstVisiblePosition();
-        View fromView = mChildren.get(fromIndex);
+        View fromView = getChildFrom(fromIndex);
+        if (fromView == null) return;
 //        View fromView = mAdapter.getViewForPosition(from);
 
         int[] froms = getLeftAndTopForPosition(from);
@@ -276,8 +324,8 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private void moveViewToPosition(int position, View view) {
-        boolean removeResult = mChildren.remove(view);
-        mChildren.add(getIndex(position), view);
+        boolean removeResult = removeChild(view);
+        addChild(getIndex(position), view);
         log("moveViewToPosition size=" + mChildren.size() + ";removeResult=" + removeResult);
     }
 
@@ -346,7 +394,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private void log(String msg) {
-        Log.e("moveongridview", msg);
+//        Log.e("moveongridview", msg);
     }
 
     private View mDragedView;
@@ -370,6 +418,9 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         mDragedView = view;
         mDragIndex = indexOfChild(view);
         dispatchItemCaptured();
+        if (mOnItemLongClickListener != null) {
+            mOnItemLongClickListener.onItemLongClick(parent, view, position, id);
+        }
         return true;
     }
 
