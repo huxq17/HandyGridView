@@ -4,20 +4,15 @@ package com.huxq17.moveongridview;
 import android.annotation.TargetApi;
 import android.database.DataSetObserver;
 import android.os.Build;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-import java.util.HashMap;
-
 public class WrappedApdater extends BaseAdapter {
     private BaseAdapter mRealApdater;
-    private HashMap<Integer, View> mItems;
 
     WrappedApdater(BaseAdapter realApdater) {
         mRealApdater = realApdater;
-        mItems = new HashMap<>();
     }
 
     @Override
@@ -38,33 +33,7 @@ public class WrappedApdater extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = mRealApdater.getView(position, convertView, parent);
-//       View itemView = mItems.get(position);
-//        int hashcode = -1;
-//        if(itemView!=null){
-//            hashcode = mItems.get(position).hashCode();
-//        }
-////        Log.e("tag", "getView position =" + position+"view="+view.hashCode()+";itemview="+hashcode+";convertView="+convertView);
-//        if(convertView!=null){
-////            Log.e("tag", "getView convertView="+convertView.hashCode());
-//        }
-//        mItems.put(position, view);
         return view;
-    }
-
-    public View getViewForPosition(int position) {
-        View view = mItems.get(position);
-
-//        for (Map.Entry<Integer, View> items : mItems.entrySet()) {
-//            Log.e("tag", "getViewForPosition  position =" + items.getKey() + ";view=" + items.getValue().hashCode());
-//        }
-        if (view == null) {
-            Log.e("tag", "getViewForPosition have not found view for position =" + position);
-        }
-        return view;
-    }
-
-    public void setViewForPosition(int position, View view) {
-        mItems.put(position, view);
     }
 
     @Override
