@@ -4,8 +4,8 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -95,15 +95,24 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         });
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public void onGridViewVisible() {
-        mHorizontalSpacing = getHorizontalSpacing();
-        mVerticalSpacing = getVerticalSpacing();
         mColumnsNum = getNumColumns();
     }
 
     private WrappedApdater mAdapter;
     private OnItemMovedListener mItemMovedListener;
+
+    @Override
+    public void setHorizontalSpacing(int horizontalSpacing) {
+        super.setHorizontalSpacing(horizontalSpacing);
+        mHorizontalSpacing = horizontalSpacing;
+    }
+
+    @Override
+    public void setVerticalSpacing(int verticalSpacing) {
+        super.setVerticalSpacing(verticalSpacing);
+        mVerticalSpacing = verticalSpacing;
+    }
 
     @Override
     public void setAdapter(ListAdapter adapter) {
@@ -394,7 +403,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private void log(String msg) {
-//        Log.e("moveongridview", msg);
+        Log.e("moveongridview", msg);
     }
 
     private View mDragedView;
@@ -405,7 +414,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private int mVerticalSpacing;
     private int mDragPosition;
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         view.getGlobalVisibleRect(mDragedRect);
