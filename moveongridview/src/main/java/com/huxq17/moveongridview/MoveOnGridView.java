@@ -2,6 +2,7 @@ package com.huxq17.moveongridview;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.DragEvent;
@@ -103,9 +104,13 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 //        mColumnsNum = getNumColumns();
     }
 
-    private Object scrollBy(int deltaY) {
+    public void scrollListBy(int deltaY) {
 //        log("scrollby deltaY=" + deltaY);
-        return ReflectUtil.invokeMethod(this, "trackMotionScroll", new Object[]{deltaY, deltaY}, new Class[]{int.class, int.class});
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            super.scrollListBy(deltaY);
+        } else {
+            ReflectUtil.invokeMethod(this, "trackMotionScroll", new Object[]{-deltaY, -deltaY}, new Class[]{int.class, int.class});
+        }
     }
 
     private WrappedApdater mAdapter;
@@ -324,9 +329,9 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     @Override
     public void onMove(int lastX, int lastY, int curX, int curY) {
 //        smoothScrollByOffset(curY - lastY);
-        int deltaY = lastY - curY;
-        mDragedView.offsetTopAndBottom(-deltaY);
-        scrollBy(deltaY);
+        int deltaY = curY-lastY ;
+        mDragedView.offsetTopAndBottom(deltaY);
+        scrollListBy(deltaY);
     }
 
     @Override
