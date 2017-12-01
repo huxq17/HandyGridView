@@ -1,9 +1,7 @@
 package com.huxq17.moveongridview;
 
 
-import android.annotation.TargetApi;
 import android.database.DataSetObserver;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -91,9 +89,9 @@ public class WrappedApdater extends BaseAdapter {
         return mRealApdater.getDropDownView(position, convertView, parent);
     }
 
-    @TargetApi(Build.VERSION_CODES.O)
-    @Override
-    public CharSequence[] getAutofillOptions() {
-        return mRealApdater.getAutofillOptions();
-    }
+//    @TargetApi(Build.VERSION_CODES.O)
+//    @Override
+//    public CharSequence[] getAutofillOptions() {
+//        return mRealApdater.getAutofillOptions();
+//    }
 }

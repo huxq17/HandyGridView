@@ -1,5 +1,6 @@
 package com.huxq17.moveongridview;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
@@ -19,6 +20,7 @@ import android.widget.ListAdapter;
 import com.huxq17.moveongridview.scrollrunner.ICarrier;
 import com.huxq17.moveongridview.scrollrunner.ScrollRunner;
 import com.huxq17.moveongridview.utils.ReflectUtil;
+import com.huxq17.moveongridview.utils.SdkVerUtils;
 
 public class MoveOnGridView extends GridView implements AdapterView.OnItemLongClickListener, ICarrier {
     private int mScrollY;
@@ -74,9 +76,10 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                         onGridViewVisible();
                     } else {
                         int rowLine = firstVisibleItem / mColumnsNum;
-                        View firstChild = getChildAt(0);
+                        int firstPosition = mDragedView != null && mDragPosition == firstVisibleItem ? 1 : 0;
+                        View firstChild = getChildAt(firstPosition);
+                        mFirstLeft = getListPaddingLeft();
                         mFirstTop = firstChild.getTop();
-                        mFirstLeft = firstChild.getLeft();
                         mColumnWidth = firstChild.getWidth();
                         mRowHeight = firstChild.getHeight();
                         int scrollY = mFirstTop - rowLine * (mVerticalSpacing + mRowHeight);
@@ -102,15 +105,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     public void onGridViewVisible() {
 //        mColumnsNum = getNumColumns();
-    }
-
-    public void scrollListBy(int deltaY) {
-//        log("scrollby deltaY=" + deltaY);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            super.scrollListBy(deltaY);
-        } else {
-            ReflectUtil.invokeMethod(this, "trackMotionScroll", new Object[]{-deltaY, -deltaY}, new Class[]{int.class, int.class});
-        }
     }
 
     private WrappedApdater mAdapter;
@@ -267,42 +261,49 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private Rect mGridViewVisibleRect;
+    private MotionEvent mCurrMotionEvent;
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         int action = ev.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-
+                log("down");
                 mLastX = ev.getRawX();
                 mLastY = ev.getRawY();
+//                Debug.startMethodTracing("MoveOnGridView");
                 break;
             case MotionEvent.ACTION_MOVE:
                 int deltaX = (int) (ev.getRawX() - mLastX);
                 int deltaY = (int) (ev.getRawY() - mLastY);
+                mCurrMotionEvent = ev;
                 if (mDragedView != null) {
-                    if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) > mTouchSlop) {
+                    if (Math.abs(deltaX) > mTouchSlop || Math.abs(deltaY) > mTouchSlop) {
+                        mDragedView.offsetLeftAndRight(deltaX);
+                        mDragedView.offsetTopAndBottom(deltaY);
+                        mLastX = ev.getRawX();
+                        mLastY = ev.getRawY();
+                        swapItemIfNeed(ev);
+                        scrollIfNeeded();
                     }
-                    mDragedView.offsetLeftAndRight(deltaX);
-                    mDragedView.offsetTopAndBottom(deltaY);
-                    mLastX = ev.getRawX();
-                    mLastY = ev.getRawY();
-                    onDragItem(ev);
-                    scrollIfNeeded();
                 }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                log("up");
+//                Debug.stopMethodTracing();
                 if (mDragedView != null) {
                     releaseItem();
                     removeCallbacks(mScrollRunner);
                 }
                 mDragedView = null;
+                mCurrMotionEvent = null;
                 break;
         }
         return super.onTouchEvent(ev);
     }
 
+    @TargetApi(Build.VERSION_CODES.KITKAT)
     private void scrollIfNeeded() {
         mDragedView.getGlobalVisibleRect(mDragedRect);
         if (mGridViewVisibleRect == null) {
@@ -311,8 +312,8 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         }
         if (mDragedRect.top <= mGridViewVisibleRect.top) {
             boolean canScrollDown = canScrollDown();
-            if (canScrollDown && !isMove) {
-                isMove = true;
+            if (canScrollDown && !isScroll) {
+                isScroll = true;
                 int deltaY = mScrollY;
                 int duration = 3000;
                 log("should scroll down duration=" + duration);
@@ -320,23 +321,42 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
             }
         } else if (mDragedRect.bottom >= mGridViewVisibleRect.bottom) {
             boolean canScrollUp = canScrollUp();
-            log("should scroll up canScrollUp=" + canScrollUp);
+            if (canScrollUp && !isScroll) {
+                isScroll = true;
+                int totalPosition = mAdapter.getCount();
+
+                int deltaY = getTotalScrollY() + mScrollY;
+                int duration = 3000;
+                log("should scroll down duration=" + duration);
+                mScrollRunner.start(0, deltaY, duration);
+            }
         }
     }
 
-    private boolean isMove = false;
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    public void scrollListBy(int deltaY) {
+        if (SdkVerUtils.isAbove19()) {
+            super.scrollListBy(deltaY);
+        } else {
+            ReflectUtil.invokeMethod(this, "trackMotionScroll", new Object[]{-deltaY, -deltaY}, new Class[]{int.class, int.class});
+        }
+        swapItemIfNeed(mCurrMotionEvent);
+    }
+
+    private boolean isScroll = false;
 
     @Override
     public void onMove(int lastX, int lastY, int curX, int curY) {
 //        smoothScrollByOffset(curY - lastY);
-        int deltaY = curY-lastY ;
+        int deltaY = curY - lastY;
         mDragedView.offsetTopAndBottom(deltaY);
+        log("mFirstVisibleFirstItem=" + mFirstVisibleFirstItem + ";mdragePostion=" + mDragPosition);
         scrollListBy(deltaY);
     }
 
     @Override
     public void onDone() {
-        isMove = false;
+        isScroll = false;
     }
 
     public boolean canScrollDown() {
@@ -347,26 +367,28 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     public boolean canScrollUp() {
-        int row = getLastVisiblePosition() / mColumnsNum + 1;
-        int total = row * mRowHeight + (row - 1) * mVerticalSpacing;
-        if (total + mScrollY > getHeight()) {
+        if (getTotalScrollY() > -mScrollY) {
             return true;
         }
         return false;
     }
 
-    private void onDragItem(MotionEvent ev) {
-//        if(isMove)return;
+    public int getTotalScrollY() {
+        int row = (mAdapter.getCount() - 1) / mColumnsNum + 1;
+        int total = row * mRowHeight + (row - 1) * mVerticalSpacing;
+        return total - getHeight();
+    }
+
+    private void swapItemIfNeed(MotionEvent ev) {
+        if (ev == null || mDragedView == null) return;
         int currDraggedPosition = pointToPosition((int) ev.getX(), (int) ev.getY());
         if (currDraggedPosition != INVALID_POSITION) {
             int dragPosition = getDragPosition();
-//                    log("dragPosition=" + dragPosition + ";currDraggedPosition=" + currDraggedPosition);
+            log("swapItemIfNeed currDraggedPosition=" + currDraggedPosition + ";dragPosition=" + dragPosition);
             if (currDraggedPosition != dragPosition) {
                 getChildAt(currDraggedPosition - getFirstVisiblePosition()).getGlobalVisibleRect(mDragedRect);
                 if (currDraggedPosition < dragPosition) {
-
                     for (int i = dragPosition - 1; i >= currDraggedPosition; i--) {
-//                        log("swap i=" + i + ";to=" + (i + 1));
                         swapItem(i, i + 1);
                     }
                 } else {
@@ -434,31 +456,49 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         refreshChildren();
     }
 
-    private Rect mTouchFrame;
-    private Rect mRect = new Rect();
+    @Override
+    public View getChildAt(int index) {
+        int position = index;
+        if (mDragedView != null && isScroll) {
+            if (position == 0) {
+                position = 1;
+            } else if (position == 1) {
+                position = 0;
+            } else {
+//                position = position;
+            }
+        }
+        if (position >= getChildCount()) {
+            position = getChildCount() - 1;
+        }
+//        log("getChildAt position=" + position + ";index=" + index + ";getChildCount=" + getChildCount());
+        return super.getChildAt(position);
+    }
 
     @Override
+    public int getChildCount() {
+        return super.getChildCount();
+    }
+
+    private Rect mTouchFrame;
+
     public int pointToPosition(int x, int y) {
         if (mTouchFrame == null) {
             mTouchFrame = new Rect();
         }
-        try {
-            int m = (x - mFirstLeft) / (mColumnWidth + mHorizontalSpacing);
-            int n = (y - mFirstTop) / (mRowHeight + mVerticalSpacing);
-            int right = mFirstLeft + m * (mColumnWidth + mHorizontalSpacing) + mColumnWidth;
-            int bottom = mFirstTop + n * (mRowHeight + mVerticalSpacing) + mRowHeight;
-            if (x > right || y > bottom) {
-                return INVALID_POSITION;
+        int m = (x - mFirstLeft) / (mColumnWidth + mHorizontalSpacing);
+        int n = (y - mFirstTop) / (mRowHeight + mVerticalSpacing);
+        int right = mFirstLeft + m * (mColumnWidth + mHorizontalSpacing) + mColumnWidth;
+        int bottom = mFirstTop + n * (mRowHeight + mVerticalSpacing) + mRowHeight;
+        if (x > right || y > bottom) {
+            return INVALID_POSITION;
+        } else {
+            int result = n * mColumnsNum + m + mFirstVisibleFirstItem;
+            if (result <= getLastVisiblePosition()) {
+                return n * mColumnsNum + m + mFirstVisibleFirstItem;
             } else {
-                int result = n * mColumnsNum + m + getFirstVisiblePosition();
-                if (result <= getLastVisiblePosition()) {
-                    return n * mColumnsNum + m + getFirstVisiblePosition();
-                } else {
-                    return INVALID_POSITION;
-                }
+                return INVALID_POSITION;
             }
-        } catch (Exception e) {
-
         }
 //        for (int i = 0; i < mVisibleItemCount; i++) {
 //            final int firstTop = mFirstTop;
@@ -473,7 +513,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 //                return i + getFirstVisiblePosition();
 //            }
 //        }
-        return INVALID_POSITION;
     }
 
     private void log(String msg) {
@@ -516,6 +555,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         int[] destation = getLeftAndTopForPosition(mDragPosition);
         int offsetX = destation[0] - mDragedView.getLeft();
         int offsetY = destation[1] - mDragedView.getTop();
+        log("releaseItem mDragPosition=" + mDragPosition + ";left=" + destation[0] + ";top=" + destation[1]);
         mDragedView.offsetLeftAndRight(offsetX);
         mDragedView.offsetTopAndBottom(offsetY);
         dispatchItemReleased();
@@ -539,12 +579,13 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     protected int getChildDrawingOrder(int childCount, int i) {
         if (mDragedView != null) {
             mDragIndex = indexOfChild(mDragedView);
+
             if (i == mDragIndex) {
-//                log("getChildDrawingOrder is drag mDragIndex=" + mDragIndex + ";i=" + i + ";childCount=" + childCount + ";result=" + (childCount - 1));
                 return childCount - 1;
             } else if (i == childCount - 1) {
-//                log("getChildDrawingOrder not drag mDragIndex=" + mDragIndex + ";i=" + i + ";childCount=" + childCount + ";result=" + mDragIndex);
                 return mDragIndex;
+            } else {
+                return i;
             }
         }
         return i;
