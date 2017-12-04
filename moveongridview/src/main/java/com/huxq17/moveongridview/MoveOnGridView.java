@@ -91,7 +91,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                             mMoveDirection = MOVE_NONE;
                         }
                         mScrollY = scrollY;
-
                         mFirstVisibleFirstItem = firstVisibleItem;
                         mVisibleItemCount = visibleItemCount;
                     }
@@ -262,6 +261,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     private Rect mGridViewVisibleRect;
     private MotionEvent mCurrMotionEvent;
+    private int mDeltaX, mDeltaY;
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
@@ -271,6 +271,9 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 log("down");
                 mLastX = ev.getRawX();
                 mLastY = ev.getRawY();
+                mDeltaX = (int) (ev.getRawX() - ev.getX());
+                mDeltaY = (int) (ev.getRawY() - ev.getY());
+                log("action move mDeltaX=" + mDeltaX + ";mDeltaY=" + mDeltaY + ";gety=" + ev.getY() + ";getRawY=" + ev.getRawY() + ";mRowHeight=" + mRowHeight);
 //                Debug.startMethodTracing("MoveOnGridView");
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -279,13 +282,13 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 mCurrMotionEvent = ev;
                 if (mDragedView != null) {
                     if (Math.abs(deltaX) > mTouchSlop || Math.abs(deltaY) > mTouchSlop) {
-                        mDragedView.offsetLeftAndRight(deltaX);
-                        mDragedView.offsetTopAndBottom(deltaY);
-                        mLastX = ev.getRawX();
-                        mLastY = ev.getRawY();
-                        swapItemIfNeed(ev);
-                        scrollIfNeeded();
                     }
+                    mDragedView.offsetLeftAndRight(deltaX);
+                    mDragedView.offsetTopAndBottom(deltaY);
+                    mLastX = ev.getRawX();
+                    mLastY = ev.getRawY();
+                    swapItemIfNeed(ev);
+                    scrollIfNeeded();
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -298,6 +301,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 }
                 mDragedView = null;
                 mCurrMotionEvent = null;
+//                onDone();
                 break;
         }
         return super.onTouchEvent(ev);
@@ -318,6 +322,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 int duration = 3000;
                 log("should scroll down duration=" + duration);
                 mScrollRunner.start(0, deltaY, duration);
+
             }
         } else if (mDragedRect.bottom >= mGridViewVisibleRect.bottom) {
             boolean canScrollUp = canScrollUp();
@@ -340,7 +345,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         } else {
             ReflectUtil.invokeMethod(this, "trackMotionScroll", new Object[]{-deltaY, -deltaY}, new Class[]{int.class, int.class});
         }
-        swapItemIfNeed(mCurrMotionEvent);
     }
 
     private boolean isScroll = false;
@@ -349,9 +353,10 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     public void onMove(int lastX, int lastY, int curX, int curY) {
 //        smoothScrollByOffset(curY - lastY);
         int deltaY = curY - lastY;
+        log("onMove firsttop="+getChildAt(0).getTop()+";mv="+mVerticalSpacing);
         mDragedView.offsetTopAndBottom(deltaY);
-        log("mFirstVisibleFirstItem=" + mFirstVisibleFirstItem + ";mdragePostion=" + mDragPosition);
         scrollListBy(deltaY);
+        swapItemIfNeed(mCurrMotionEvent);
     }
 
     @Override
@@ -381,10 +386,11 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     private void swapItemIfNeed(MotionEvent ev) {
         if (ev == null || mDragedView == null) return;
-        int currDraggedPosition = pointToPosition((int) ev.getX(), (int) ev.getY());
+        final int realX = (int) (ev.getRawX() - mDeltaX);
+        final int realY = (int) (ev.getY());
+        int currDraggedPosition = pointToPosition2(realX, realY);
         if (currDraggedPosition != INVALID_POSITION) {
             int dragPosition = getDragPosition();
-            log("swapItemIfNeed currDraggedPosition=" + currDraggedPosition + ";dragPosition=" + dragPosition);
             if (currDraggedPosition != dragPosition) {
                 getChildAt(currDraggedPosition - getFirstVisiblePosition()).getGlobalVisibleRect(mDragedRect);
                 if (currDraggedPosition < dragPosition) {
@@ -460,7 +466,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     public View getChildAt(int index) {
         int position = index;
         if (mDragedView != null && isScroll) {
-            if (position == 0) {
+            if (index == 0) {
                 position = 1;
             } else if (position == 1) {
                 position = 0;
@@ -482,7 +488,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     private Rect mTouchFrame;
 
-    public int pointToPosition(int x, int y) {
+    public int pointToPosition2(int x, int y) {
         if (mTouchFrame == null) {
             mTouchFrame = new Rect();
         }
@@ -494,25 +500,8 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
             return INVALID_POSITION;
         } else {
             int result = n * mColumnsNum + m + mFirstVisibleFirstItem;
-            if (result <= getLastVisiblePosition()) {
-                return n * mColumnsNum + m + mFirstVisibleFirstItem;
-            } else {
-                return INVALID_POSITION;
-            }
+            return result <= getLastVisiblePosition() ? result : INVALID_POSITION;
         }
-//        for (int i = 0; i < mVisibleItemCount; i++) {
-//            final int firstTop = mFirstTop;
-//            final int firstLeft = mFirstLeft;
-//            int row = i / mColumnsNum;
-//            int column = i % mColumnsNum;
-//            int left = firstLeft + column * (mColumnWidth + mHorizontalSpacing);
-//            int top = firstTop + row * (mRowHeight + mVerticalSpacing);
-//            mTouchFrame.set(left, top, left + mColumnWidth, top + mRowHeight);
-//            if (mTouchFrame.contains(x, y)) {
-//                log("pointToPosition position=" + (i + getFirstVisiblePosition()) );
-//                return i + getFirstVisiblePosition();
-//            }
-//        }
     }
 
     private void log(String msg) {
