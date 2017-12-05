@@ -1,7 +1,6 @@
 package com.huxq17.moveongridview;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,7 +35,6 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Log.e("tag", "getview position=" + position);
         TextView textView;
         if (convertView == null) {
             textView = new TextView(context);

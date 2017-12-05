@@ -36,6 +36,17 @@ public class ScrollRunner implements Runnable {
         lastY = startY;
     }
 
+    public void cancel() {
+        if (!mScroller.isFinished()) {
+            mCarrier.removeCallbacks(this);
+            mScroller.forceFinished(true);
+        }
+    }
+
+    public boolean isRunning() {
+        return !mScroller.isFinished();
+    }
+
     @Override
     public void run() {
         if (mScroller.computeScrollOffset()) {
