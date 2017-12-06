@@ -21,6 +21,8 @@ import com.huxq17.moveongridview.scrollrunner.ScrollRunner;
 import com.huxq17.moveongridview.utils.ReflectUtil;
 import com.huxq17.moveongridview.utils.SdkVerUtils;
 
+import java.util.HashMap;
+
 public class MoveOnGridView extends GridView implements AdapterView.OnItemLongClickListener, ICarrier {
     private int mScrollY;
     private int mFirstTop, mFirstLeft;
@@ -220,7 +222,12 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private void addChild(int index, View child) {
-        Item item = new Item(child);
+        Item item = items.get(child);
+        if (item == null) {
+            item = new Item(child);
+            item.setParent(this);
+            items.put(child, item);
+        }
         addItem(index, item);
     }
 
@@ -403,30 +410,31 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                         swapItem(i, i - 1);
                     }
                 }
-//                log("dragview position=" + (currDraggedPosition - getFirstVisiblePosition()) + ";dragindex=" + indexOfChild(mDragedView));
                 moveViewToPosition(currDraggedPosition, mDragedView);
                 mDragPosition = currDraggedPosition;
             }
         }
     }
 
+    private HashMap<View, Item> items = new HashMap<>();
+
     private void swapItem(int from, int to) {
         int fromIndex = from - getFirstVisiblePosition();
-        int toIndex = to - getFirstVisiblePosition();
         Item fromItem = mChildren.get(fromIndex);
-        View fromView = fromItem.view;
+        final View fromView = fromItem.view;
         if (fromItem == null || fromView == null) return;
-
         int[] froms = getLeftAndTopForPosition(from);
         int[] tos = getLeftAndTopForPosition(to);
-        int offsetX = tos[0] - froms[0];
-        int offsetY = tos[1] - froms[1];
-        fromItem.move(offsetX, offsetY);
+//        final int offsetX = tos[0] - froms[0];
+//        final int offsetY = tos[1] - froms[1];
+        fromItem.moveTo(from, to);
+    }
+
+    public void moveItem(int from, int to, View fromView) {
         moveViewToPosition(to, fromView);
         dispatchItemMoved(from, to);
-
         removeViewInLayout(fromView);
-        addViewInLayout(fromView, toIndex, fromView.getLayoutParams(), true);
+        addViewInLayout(fromView, to - getFirstVisiblePosition(), fromView.getLayoutParams(), true);
     }
 
     private void dispatchItemMoved(int from, int to) {
@@ -454,6 +462,12 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         lt[0] = left;
         lt[1] = top;
         return lt;
+    }
+
+    public int[] getLeftAndTopForView(View view) {
+        int index = indexOfChild(view);
+        int position = index + mFirstVisibleFirstItem;
+        return getLeftAndTopForPosition(position);
     }
 
     @Override

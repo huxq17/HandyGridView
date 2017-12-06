@@ -15,6 +15,10 @@ public class ScrollRunner implements Runnable {
         mScroller = new Scroller(carrier.getContext(), new LinearInterpolator());
     }
 
+    public void setCarrier(ICarrier carrier) {
+        mCarrier = carrier;
+    }
+
     public void start(int dx, int dy) {
         start(dx, dy, mDuration);
     }
@@ -43,6 +47,20 @@ public class ScrollRunner implements Runnable {
         }
     }
 
+    public int getCurX() {
+        return mScroller.getCurrX();
+    }
+
+    public int getCurY() {
+        return mScroller.getCurrY();
+    }
+
+    public void abortAnimation() {
+        if (!mScroller.isFinished()) {
+            mScroller.abortAnimation();
+        }
+    }
+
     public boolean isRunning() {
         return !mScroller.isFinished();
     }
@@ -50,12 +68,12 @@ public class ScrollRunner implements Runnable {
     @Override
     public void run() {
         if (mScroller.computeScrollOffset()) {
-            final int currentX = mScroller.getCurrX();
-            final int currentY = mScroller.getCurrY();
+            int currentX = mScroller.getCurrX();
+            int currentY = mScroller.getCurrY();
             mCarrier.onMove(lastX, lastY, currentX, currentY);
-            mCarrier.post(this);
             lastX = currentX;
             lastY = currentY;
+            mCarrier.post(this);
         } else {
             mCarrier.removeCallbacks(this);
             mCarrier.onDone();

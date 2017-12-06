@@ -11,21 +11,50 @@ public class Item implements ICarrier {
     public int position;
     public View view;
     private ScrollRunner mRunner;
-    private int mDuration = 200;
+    private int from, to;
+    private boolean hasNext = false;
+    private MoveOnGridView parent;
 
     public Item(View view) {
         this.view = view;
         mRunner = new ScrollRunner(this);
     }
 
-    public void move(int offsetX, int offsetY) {
-        mRunner.cancel();
-        mRunner.start(offsetX, offsetY, mDuration);
+    public void setParent(MoveOnGridView parent) {
+        this.parent = parent;
+    }
+
+    public void move(final int offsetX, final int offsetY) {
+        mRunner.start(offsetX, offsetY);
+    }
+
+    public void moveTo(int from, int to) {
+        int[] froms = parent.getLeftAndTopForPosition(from);
+        int[] tos = parent.getLeftAndTopForPosition(to);
+        this.from = from;
+        this.to = to;
+        if (!mRunner.isRunning()) {
+            int offsetX = tos[0] - froms[0];
+            int offsetY = tos[1] - froms[1];
+            move(offsetX, offsetY);
+            parent.moveItem(from, to, view);
+        } else {
+            hasNext = true;
+        }
     }
 
     @Override
-    public Context getContext() {
-        return view.getContext();
+    public void onDone() {
+        int[] froms = new int[]{view.getLeft(), view.getTop()};
+        from = parent.indexOfChild(view) + parent.getFirstVisiblePosition();
+        int[] tos = parent.getLeftAndTopForPosition(to);
+        if (hasNext) {
+            int offsetX = tos[0] - froms[0];
+            int offsetY = tos[1] - froms[1];
+            move(offsetX, offsetY);
+            parent.moveItem(from, to, view);
+            hasNext = false;
+        }
     }
 
     @Override
@@ -37,11 +66,6 @@ public class Item implements ICarrier {
     }
 
     @Override
-    public void onDone() {
-
-    }
-
-    @Override
     public boolean post(Runnable runnable) {
         return view.post(runnable);
     }
@@ -49,6 +73,11 @@ public class Item implements ICarrier {
     @Override
     public boolean removeCallbacks(Runnable action) {
         return view.removeCallbacks(action);
+    }
+
+    @Override
+    public Context getContext() {
+        return view.getContext();
     }
 
     @Override
