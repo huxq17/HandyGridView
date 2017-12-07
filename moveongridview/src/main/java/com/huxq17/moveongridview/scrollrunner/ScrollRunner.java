@@ -73,7 +73,12 @@ public class ScrollRunner implements Runnable {
             mCarrier.onMove(lastX, lastY, currentX, currentY);
             lastX = currentX;
             lastY = currentY;
-            mCarrier.post(this);
+            if (currentX == mScroller.getFinalX() && currentY == mScroller.getFinalY()) {
+                mCarrier.removeCallbacks(this);
+                mCarrier.onDone();
+            } else {
+                mCarrier.post(this);
+            }
         } else {
             mCarrier.removeCallbacks(this);
             mCarrier.onDone();

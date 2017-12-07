@@ -1,13 +1,15 @@
 package com.huxq17.moveongridview;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import com.huxq17.moveongridview.scrollrunner.ICarrier;
 import com.huxq17.moveongridview.scrollrunner.ScrollRunner;
 
 
-public class Item implements ICarrier {
+public class Child implements ICarrier {
     public int position;
     public View view;
     private ScrollRunner mRunner;
@@ -15,7 +17,7 @@ public class Item implements ICarrier {
     private boolean hasNext = false;
     private MoveOnGridView parent;
 
-    public Item(View view) {
+    public Child(View view) {
         this.view = view;
         mRunner = new ScrollRunner(this);
     }
@@ -29,32 +31,43 @@ public class Item implements ICarrier {
     }
 
     public void moveTo(int from, int to) {
-        int[] froms = parent.getLeftAndTopForPosition(from);
-        int[] tos = parent.getLeftAndTopForPosition(to);
         this.from = from;
         this.to = to;
+        int[] froms = parent.getLeftAndTopForPosition(from);
+        int[] tos = parent.getLeftAndTopForPosition(to);
         if (!mRunner.isRunning()) {
             int offsetX = tos[0] - froms[0];
             int offsetY = tos[1] - froms[1];
             move(offsetX, offsetY);
-            parent.moveItem(from, to, view);
         } else {
             hasNext = true;
         }
     }
 
+    private void log(String msg) {
+        String str = getString();
+        Log.e("item", msg + ";str=" + str);
+    }
+
     @Override
     public void onDone() {
         int[] froms = new int[]{view.getLeft(), view.getTop()};
-        from = parent.indexOfChild(view) + parent.getFirstVisiblePosition();
+        from = parent.pointToPosition(froms[0], froms[1]);
+
         int[] tos = parent.getLeftAndTopForPosition(to);
         if (hasNext) {
-            int offsetX = tos[0] - froms[0];
-            int offsetY = tos[1] - froms[1];
-            move(offsetX, offsetY);
-            parent.moveItem(from, to, view);
+            if (from != to) {
+                int offsetX = tos[0] - froms[0];
+                int offsetY = tos[1] - froms[1];
+                move(offsetX, offsetY);
+            }
             hasNext = false;
         }
+    }
+
+    private String getString() {
+        TextView textView = (TextView) view;
+        return (String) textView.getText();
     }
 
     @Override
@@ -83,9 +96,9 @@ public class Item implements ICarrier {
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
-        if (obj instanceof Item) {
-            Item item = (Item) obj;
-            if (this.view == item.view) {
+        if (obj instanceof Child) {
+            Child child = (Child) obj;
+            if (this.view == child.view) {
                 return true;
             }
         }
