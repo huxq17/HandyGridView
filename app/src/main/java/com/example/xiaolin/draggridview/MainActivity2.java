@@ -30,7 +30,7 @@ public class MainActivity2 extends Activity {
 
     private void initView() {
         gridView = (DragSortGridView)findViewById(R.id.drag_sort_grid_view);
-        gridView.setDragModel(DragSortGridView.DRAG_BY_LONG_CLICK);
+//        gridView.setDragModel(DragSortGridView.DRAG_BY_LONG_CLICK);
         GridViewAdapter2 adapter  = new GridViewAdapter2(this, strList);
         gridView.setAdapter(adapter);
     }

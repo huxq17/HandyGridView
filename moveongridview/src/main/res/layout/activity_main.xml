@@ -9,9 +9,13 @@
         android:id="@+id/id_gridview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/white"
         android:gravity="center"
+        android:clipToPadding="false"
         android:horizontalSpacing="10dp"
         android:numColumns="3"
+        android:paddingBottom="50dp"
+        android:paddingTop="20dp"
         android:scrollbars="vertical"
         android:stretchMode="columnWidth"
         android:verticalSpacing="10dp" />

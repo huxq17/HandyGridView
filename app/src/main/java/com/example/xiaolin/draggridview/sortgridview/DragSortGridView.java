@@ -134,7 +134,7 @@ public class DragSortGridView extends FrameLayout {
                     hasSendDragMsg = true;
                 }
             }
-        };
+        }
 
     };
     private boolean hasSendDragMsg = false;

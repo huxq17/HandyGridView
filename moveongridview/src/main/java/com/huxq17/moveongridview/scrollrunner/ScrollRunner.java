@@ -1,6 +1,7 @@
 package com.huxq17.moveongridview.scrollrunner;
 
 
+import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.Scroller;
 
@@ -11,8 +12,12 @@ public class ScrollRunner implements Runnable {
     private int lastX, lastY;
 
     public ScrollRunner(ICarrier carrier) {
+        this(carrier, new LinearInterpolator());
+    }
+
+    public ScrollRunner(ICarrier carrier, Interpolator interpolator) {
         mCarrier = carrier;
-        mScroller = new Scroller(carrier.getContext(), new LinearInterpolator());
+        mScroller = new Scroller(carrier.getContext(), interpolator);
     }
 
     public void setCarrier(ICarrier carrier) {

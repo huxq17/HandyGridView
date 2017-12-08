@@ -8,12 +8,12 @@ public interface OnItemCapturedListener {
      *
      * @param v
      */
-    void onItemCaptured(View v);
+    void onItemCaptured(View v,int position);
 
     /**
      * Called when user released the drag view.
      *
      * @param v
      */
-    void onItemReleased(View v);
+    void onItemReleased(View v,int position);
 }
