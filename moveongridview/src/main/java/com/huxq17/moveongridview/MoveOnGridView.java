@@ -23,6 +23,8 @@ import com.huxq17.moveongridview.scrollrunner.ScrollRunner;
 import com.huxq17.moveongridview.utils.ReflectUtil;
 import com.huxq17.moveongridview.utils.SdkVerUtils;
 
+import static android.R.attr.left;
+
 public class MoveOnGridView extends GridView implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener, ICarrier {
     private int mScrollY;
     private int mFirstTop, mFirstLeft;
@@ -43,7 +45,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     private View mDraggedView;
     private int mDraggedIndex = -1;
-    private Rect mDragedRect = new Rect();
+    private Rect mDraggedRect = new Rect();
     private int mColumnWidth, mRowHeight, mColumnsNum;
     private int mHorizontalSpacing;
     private int mVerticalSpacing;
@@ -295,7 +297,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 //                Debug.stopMethodTracing();
                 if (mDraggedView != null) {
                     releaseDraggedView();
-                    removeCallbacks(mScrollRunner);
+                    mScrollRunner.cancel();
                     handled = true;
                 }
                 mDraggedView = null;
@@ -331,7 +333,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 recordDragViewIfNeeded(getChildAt(currDraggedPosition - mFirstVisibleFirstItem), currDraggedPosition);
             }
         } else {
-            view.getGlobalVisibleRect(mDragedRect);
+            view.getGlobalVisibleRect(mDraggedRect);
             mDraggedPosition = position;
             mDraggedView = view;
             mDraggedIndex = mDraggedPosition - mFirstVisibleFirstItem;
@@ -357,16 +359,16 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private void scrollIfNeeded() {
-        mDraggedView.getGlobalVisibleRect(mDragedRect);
+        mDraggedView.getGlobalVisibleRect(mDraggedRect);
         measureVisibleRect();
-        if (mDragedRect.top <= mGridViewVisibleRect.top) {
+        if (mDraggedRect.top <= mGridViewVisibleRect.top) {
             boolean canScrollDown = canScrollDown();
             if (canScrollDown && !mScrollRunner.isRunning()) {
                 int deltaY = mClipToPadding ? mScrollY : mScrollY - getListPaddingTop();
                 final int duration = Math.abs(deltaY) * 1000 / mScrollSpeed;
                 mScrollRunner.start(0, deltaY, duration);
             }
-        } else if (mDragedRect.bottom >= mGridViewVisibleRect.bottom) {
+        } else if (mDraggedRect.bottom >= mGridViewVisibleRect.bottom) {
             boolean canScrollUp = canScrollUp();
             if (canScrollUp && !mScrollRunner.isRunning()) {
                 int deltaY = mClipToPadding ? getTotalScrollY() + mScrollY : getTotalScrollY() + mScrollY + getListPaddingBottom();
@@ -440,24 +442,41 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     private void swapItemIfNeed(MotionEvent ev) {
         if (ev == null || mDraggedView == null) return;
+        measureVisibleRect();
+        mDraggedView.getGlobalVisibleRect(mDraggedRect);
         final int realX = (int) (ev.getRawX() - mGridViewVisibleRect.left);
         final int realY = (int) (ev.getRawY() - mGridViewVisibleRect.top);
         int currDraggedPosition = pointToPosition(realX, realY);
-        if (currDraggedPosition != INVALID_POSITION) {
+        int left = mDraggedView.getLeft(), top = mDraggedView.getTop();
+        boolean intersect = mGridViewVisibleRect.intersect(mDraggedRect);
+//        if(intersect){
+//            left = intersect ? mDraggedRect.left - mGridViewVisibleRect.left : mDraggedRect.left;
+//            top = intersect ? mDraggedRect.top - mGridViewVisibleRect.top : mDraggedRect.top;
+//        }
+//        left = intersect ? mDraggedRect.left - mGridViewVisibleRect.left : mDraggedRect.left;
+//        top = intersect ? mDraggedRect.top - mGridViewVisibleRect.top : mDraggedRect.top;
+//        log("top=" + top + ";left=" + left + ";mGridViewVisibleRect.left=" + mGridViewVisibleRect.left + ";dleft=" + mDraggedRect.left + ";dtop=" + mDraggedRect.top + ";tr=" + mGridViewVisibleRect.intersect(mDraggedRect));
+        int draggedViewPosition;
+        if (currDraggedPosition == INVALID_POSITION) {
+            draggedViewPosition = pointToPosition(left, top);
+        } else {
+            draggedViewPosition = currDraggedPosition;
+        }
+        if (draggedViewPosition != INVALID_POSITION) {
             int dragPosition = getDragPosition();
-            if (currDraggedPosition != dragPosition) {
-                getChildAt(currDraggedPosition - getFirstVisiblePosition()).getGlobalVisibleRect(mDragedRect);
-                if (currDraggedPosition < dragPosition) {
-                    for (int i = dragPosition - 1; i >= currDraggedPosition; i--) {
+            if (draggedViewPosition != dragPosition) {
+                getChildAt(draggedViewPosition - getFirstVisiblePosition()).getGlobalVisibleRect(mDraggedRect);
+                if (draggedViewPosition < dragPosition) {
+                    for (int i = dragPosition - 1; i >= draggedViewPosition; i--) {
                         swapItem(i, i + 1);
                     }
                 } else {
-                    for (int i = dragPosition + 1; i <= currDraggedPosition; i++) {
+                    for (int i = dragPosition + 1; i <= draggedViewPosition; i++) {
                         swapItem(i, i - 1);
                     }
                 }
-                moveViewToPosition(currDraggedPosition, mDraggedView);
-                mDraggedPosition = currDraggedPosition;
+                moveViewToPosition(draggedViewPosition, mDraggedView);
+                mDraggedPosition = draggedViewPosition;
             }
         }
     }
@@ -546,9 +565,9 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     public int pointToPosition(int x, int y) {
         int m = (x - mFirstLeft) / (mColumnWidth + mHorizontalSpacing);
         int n = (y - mFirstTop) / (mRowHeight + mVerticalSpacing);
-        int right = mFirstLeft + m * (mColumnWidth + mHorizontalSpacing) + mColumnWidth;
-        int bottom = mFirstTop + n * (mRowHeight + mVerticalSpacing) + mRowHeight;
-        if (x > right || y > bottom) {
+        int right = mFirstLeft + (m + 1) * (mColumnWidth + mHorizontalSpacing);
+        int bottom = mFirstTop + (n + 1) * (mRowHeight + mVerticalSpacing) + mRowHeight;
+        if (x > right || y > bottom || m >= mColumnsNum) {
             return INVALID_POSITION;
         } else {
             int result = n * mColumnsNum + m + mFirstVisibleFirstItem;
@@ -609,18 +628,19 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     @Override
     protected int getChildDrawingOrder(int childCount, int i) {
+        int order = i;
         if (mDraggedView != null) {
             mDraggedIndex = indexOfChild(mDraggedView);
 
             if (i == mDraggedIndex) {
-                return childCount - 1;
+                order = childCount - 1;
             } else if (i == childCount - 1) {
-                return mDraggedIndex;
+                order = mDraggedIndex;
             } else {
-                return i;
+                order = i;
             }
         }
-        return i;
+        return order;
     }
 
     private MODE mode = MODE.TOUCH;

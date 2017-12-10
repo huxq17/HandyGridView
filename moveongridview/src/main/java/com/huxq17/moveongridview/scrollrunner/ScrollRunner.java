@@ -1,6 +1,7 @@
 package com.huxq17.moveongridview.scrollrunner;
 
 
+import android.util.Log;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.Scroller;
