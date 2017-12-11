@@ -10,16 +10,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
-        android:gravity="center"
         android:clipToPadding="false"
+        android:gravity="center"
         android:horizontalSpacing="10dp"
         android:numColumns="3"
         android:paddingBottom="50dp"
         android:paddingTop="20dp"
         android:scrollbars="vertical"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="10dp"
-        tools:layout_editor_absoluteY="0dp"
-        tools:layout_editor_absoluteX="8dp" />
+        android:verticalSpacing="10dp" />
 
 </android.support.constraint.ConstraintLayout>
