@@ -54,4 +54,12 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
         String s = mDatas.remove(from);
         mDatas.add(to, s);
     }
+
+    @Override
+    public boolean isFixed(int position) {
+        if (position == 0) {
+            return true;
+        }
+        return false;
+    }
 }

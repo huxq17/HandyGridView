@@ -8,4 +8,11 @@ public interface OnItemMovedListener {
      * @param to   item's destination poisition
      */
     void onItemMoved(int from, int to);
+
+    /**
+     * return whether the item can move.
+     * @param position
+     * @return
+     */
+    boolean isFixed(int position);
 }

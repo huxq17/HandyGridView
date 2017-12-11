@@ -455,8 +455,19 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         }
     }
 
+    private boolean isFixedPosition(int position) {
+        if ((position - mFirstVisibleFirstItem) != INVALID_POSITION && mAdapter instanceof OnItemMovedListener) {
+            mItemMovedListener = (OnItemMovedListener) mAdapter;
+            if (mItemMovedListener.isFixed(position)) {
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
     private void swapItemIfNeed(MotionEvent ev) {
-        if (ev == null || mDraggedView == null) return;
+        if (ev == null || mDraggedView == null || isFixedPosition(mDraggedPosition)) return;
         measureVisibleRect();
         measureDraggedRect();
         final int realX = (int) (ev.getRawX() - mGridViewVisibleRect.left);
@@ -470,6 +481,9 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
             } else {
                 draggedViewPosition = INVALID_POSITION;
             }
+        }
+        if (isFixedPosition(draggedViewPosition)) {
+            draggedViewPosition = INVALID_POSITION;
         }
         if (draggedViewPosition != INVALID_POSITION) {
             int dragPosition = getDragPosition();
@@ -601,12 +615,15 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         measureVisibleRect();
         deltaX = (int) (motionX - mGridViewVisibleRect.left - (mDraggedView.getLeft() + mColumnWidth / 2)) + deltaX;
         deltaY = (int) (motionY - mGridViewVisibleRect.top - (mDraggedView.getTop() + mRowHeight / 2)) + deltaY;
-        mDraggedView.offsetLeftAndRight(deltaX);
-        mDraggedView.offsetTopAndBottom(deltaY);
+        if (!isFixedPosition(mDraggedPosition)) {
+            mDraggedView.offsetLeftAndRight(deltaX);
+            mDraggedView.offsetTopAndBottom(deltaY);
+        }
+
     }
 
     private void dispatchItemCaptured() {
-        if (mItemCapturedListener != null) {
+        if (mItemCapturedListener != null && !isFixedPosition(mDraggedPosition)) {
             mItemCapturedListener.onItemCaptured(mDraggedView, mDraggedPosition);
         }
     }
@@ -621,7 +638,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private void dispatchItemReleased() {
-        if (mItemCapturedListener != null) {
+        if (mItemCapturedListener != null && !isFixedPosition(mDraggedPosition)) {
             mItemCapturedListener.onItemReleased(mDraggedView, mDraggedPosition);
         }
         if (isTouchMode() && mOnItemClickListener != null) {
