@@ -3,8 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="200dp"
-    android:paddingBottom="50dp"
     tools:context="com.huxq17.moveongridview.MainActivity">
 
     <com.huxq17.moveongridview.MoveOnGridView

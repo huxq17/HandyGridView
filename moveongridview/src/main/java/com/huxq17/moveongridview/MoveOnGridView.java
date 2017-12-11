@@ -23,8 +23,6 @@ import com.huxq17.moveongridview.scrollrunner.ScrollRunner;
 import com.huxq17.moveongridview.utils.ReflectUtil;
 import com.huxq17.moveongridview.utils.SdkVerUtils;
 
-import static android.R.attr.left;
-
 public class MoveOnGridView extends GridView implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener, ICarrier {
     private int mScrollY;
     private int mFirstTop, mFirstLeft;
@@ -333,9 +331,9 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 recordDragViewIfNeeded(getChildAt(currDraggedPosition - mFirstVisibleFirstItem), currDraggedPosition);
             }
         } else {
-            view.getGlobalVisibleRect(mDraggedRect);
             mDraggedPosition = position;
             mDraggedView = view;
+            measureDraggedRect();
             mDraggedIndex = mDraggedPosition - mFirstVisibleFirstItem;
             dispatchItemCaptured();
             correctDraggedViewLocation(0, 0);
@@ -359,9 +357,11 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private void scrollIfNeeded() {
-        mDraggedView.getGlobalVisibleRect(mDraggedRect);
+        measureDraggedRect();
         measureVisibleRect();
-        if (mDraggedRect.top <= mGridViewVisibleRect.top) {
+        if (!isDraggedInGridView()) {
+            mScrollRunner.cancel();
+        } else if (mDraggedRect.top <= mGridViewVisibleRect.top) {
             boolean canScrollDown = canScrollDown();
             if (canScrollDown && !mScrollRunner.isRunning()) {
                 int deltaY = mClipToPadding ? mScrollY : mScrollY - getListPaddingTop();
@@ -377,13 +377,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
             }
         } else {
             mScrollRunner.cancel();
-        }
-    }
-
-    private void measureVisibleRect() {
-        if (mGridViewVisibleRect == null) {
-            mGridViewVisibleRect = new Rect();
-            getGlobalVisibleRect(mGridViewVisibleRect);
         }
     }
 
@@ -440,32 +433,48 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         return total - getHeight();
     }
 
+    private boolean isDraggedInGridView() {
+        return mGridViewVisibleRect.intersects(mDraggedRect.left, mDraggedRect.top, mDraggedRect.right, mDraggedRect.bottom);
+    }
+
+    private void measureDraggedRect() {
+        mDraggedView.getGlobalVisibleRect(mDraggedRect);
+        int location[] = new int[2];
+        mDraggedView.getLocationOnScreen(location);
+        mDraggedRect.set(location[0], location[1], location[0] + mDraggedRect.width(), location[1] + mDraggedRect.height());
+    }
+
+    private void measureVisibleRect() {
+        if (mGridViewVisibleRect == null) {
+            mGridViewVisibleRect = new Rect();
+            getGlobalVisibleRect(mGridViewVisibleRect);
+            int location[] = new int[2];
+            getLocationOnScreen(location);
+            mGridViewVisibleRect.set(location[0], location[1], location[0] + mGridViewVisibleRect.width(),
+                    location[1] + mGridViewVisibleRect.height());
+        }
+    }
+
     private void swapItemIfNeed(MotionEvent ev) {
         if (ev == null || mDraggedView == null) return;
         measureVisibleRect();
-        mDraggedView.getGlobalVisibleRect(mDraggedRect);
+        measureDraggedRect();
         final int realX = (int) (ev.getRawX() - mGridViewVisibleRect.left);
         final int realY = (int) (ev.getRawY() - mGridViewVisibleRect.top);
         int currDraggedPosition = pointToPosition(realX, realY);
-        int left = mDraggedView.getLeft(), top = mDraggedView.getTop();
-        boolean intersect = mGridViewVisibleRect.intersect(mDraggedRect);
-//        if(intersect){
-//            left = intersect ? mDraggedRect.left - mGridViewVisibleRect.left : mDraggedRect.left;
-//            top = intersect ? mDraggedRect.top - mGridViewVisibleRect.top : mDraggedRect.top;
-//        }
-//        left = intersect ? mDraggedRect.left - mGridViewVisibleRect.left : mDraggedRect.left;
-//        top = intersect ? mDraggedRect.top - mGridViewVisibleRect.top : mDraggedRect.top;
-//        log("top=" + top + ";left=" + left + ";mGridViewVisibleRect.left=" + mGridViewVisibleRect.left + ";dleft=" + mDraggedRect.left + ";dtop=" + mDraggedRect.top + ";tr=" + mGridViewVisibleRect.intersect(mDraggedRect));
-        int draggedViewPosition;
-        if (currDraggedPosition == INVALID_POSITION) {
-            draggedViewPosition = pointToPosition(left, top);
-        } else {
-            draggedViewPosition = currDraggedPosition;
+        boolean intersect = isDraggedInGridView();
+        int draggedViewPosition = INVALID_POSITION;
+        if (currDraggedPosition != INVALID_POSITION) {
+            if (intersect) {
+                draggedViewPosition = currDraggedPosition;
+            } else {
+                draggedViewPosition = INVALID_POSITION;
+            }
         }
         if (draggedViewPosition != INVALID_POSITION) {
             int dragPosition = getDragPosition();
             if (draggedViewPosition != dragPosition) {
-                getChildAt(draggedViewPosition - getFirstVisiblePosition()).getGlobalVisibleRect(mDraggedRect);
+                measureDraggedRect();
                 if (draggedViewPosition < dragPosition) {
                     for (int i = dragPosition - 1; i >= draggedViewPosition; i--) {
                         swapItem(i, i + 1);
