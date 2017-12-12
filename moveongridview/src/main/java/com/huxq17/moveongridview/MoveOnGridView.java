@@ -49,6 +49,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private int mVerticalSpacing;
     private int mDraggedPosition;
     private OnItemClickListener mOnItemClickListener;
+    private boolean mShouldMove = false;
 
     public MoveOnGridView(Context context) {
         this(context, null);
@@ -250,6 +251,10 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         return mode == MODE.TOUCH;
     }
 
+    public boolean isLongPressMode() {
+        return mode == MODE.LONG_PRESS;
+    }
+
     private boolean mAutoOptimize = true;
 
     /**
@@ -263,31 +268,52 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        handleTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        return super.onTouchEvent(ev);
+//        return handleTouchEvent(ev);
+    }
+
+    private boolean handleTouchEvent(MotionEvent ev) {
         int action = ev.getAction();
         mCurrMotionEvent = ev;
         boolean handled = false;
         switch (action) {
             case MotionEvent.ACTION_DOWN:
+                log("down position="+pointToPosition((int)ev.getX(),(int)ev.getY()));
                 mLastMotionX = ev.getRawX();
                 mLastMotionY = ev.getRawY();
+                mShouldMove = false;
 //                Debug.startMethodTracing("MoveOnGridView");
                 if (isTouchMode()) {
                     recordDragViewIfNeeded(null, -1);
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
+                log("move");
                 int deltaX = (int) (ev.getRawX() - mLastMotionX);
                 int deltaY = (int) (ev.getRawY() - mLastMotionY);
                 if (mDraggedView != null) {
                     handled = true;
-                    if (Math.abs(deltaX) > mTouchSlop || Math.abs(deltaY) > mTouchSlop) {
+                    // intercept the MotionEvent only when user is not scrolling
+                    if (!mShouldMove) {
+                        if (Math.abs(deltaX) > mTouchSlop || Math.abs(deltaY) > mTouchSlop) {
+                            mShouldMove = true;
+                        }
+                    } else {
+                        mLastMotionX = ev.getRawX();
+                        mLastMotionY = ev.getRawY();
                     }
-                    correctDraggedViewLocation(deltaX, deltaY);
-                    swapItemIfNeed(ev);
-                    scrollIfNeeded();
-                    mLastMotionX = ev.getRawX();
-                    mLastMotionY = ev.getRawY();
+                    if (mShouldMove) {
+                        correctDraggedViewLocation(deltaX, deltaY);
+                        swapItemIfNeed(ev);
+                        scrollIfNeeded();
+                    }
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -311,12 +337,15 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         boolean handled = false;
-        if (mOnItemLongClickListener != null) {
-            handled = mOnItemLongClickListener.onItemLongClick(parent, view, position, id);
-        }
-        if (!isTouchMode()) {
+        if (isLongPressMode()) {
             recordDragViewIfNeeded(view, position);
             handled = true;
+        }
+        if (mOnItemLongClickListener != null) {
+            boolean longClickReturn = mOnItemLongClickListener.onItemLongClick(parent, view, position, id);
+            if (!handled) {
+                handled = longClickReturn;
+            }
         }
         return handled;
     }
@@ -336,7 +365,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
             measureDraggedRect();
             mDraggedIndex = mDraggedPosition - mFirstVisibleFirstItem;
             dispatchItemCaptured();
-            correctDraggedViewLocation(0, 0);
+//            correctDraggedViewLocation(0, 0);
         }
     }
 
@@ -456,7 +485,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private boolean isFixedPosition(int position) {
-        if ((position - mFirstVisibleFirstItem) != INVALID_POSITION && mAdapter instanceof OnItemMovedListener) {
+        if (position != INVALID_POSITION && mAdapter instanceof OnItemMovedListener) {
             mItemMovedListener = (OnItemMovedListener) mAdapter;
             if (mItemMovedListener.isFixed(position)) {
                 return true;
@@ -610,6 +639,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
      * Let our finger touch the center area of  draggedView.
      */
     private void correctDraggedViewLocation(int deltaX, int deltaY) {
+        if (mCurrMotionEvent == null) return;
         float motionX = mCurrMotionEvent.getRawX();
         float motionY = mCurrMotionEvent.getRawY();
         measureVisibleRect();
@@ -669,10 +699,14 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         return order;
     }
 
-    private MODE mode = MODE.TOUCH;
+    private MODE mode = MODE.NONE;
 
     public void setMode(MODE mode) {
         this.mode = mode;
+    }
+
+    public MODE getMode() {
+        return mode;
     }
 
     @Override
@@ -683,6 +717,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     public enum MODE {
-        TOUCH, LONG_PRESS
+        TOUCH, LONG_PRESS, NONE
     }
 }

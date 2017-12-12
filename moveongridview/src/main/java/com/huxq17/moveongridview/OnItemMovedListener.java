@@ -3,14 +3,14 @@ package com.huxq17.moveongridview;
 public interface OnItemMovedListener {
     /**
      * Called when user moved the item of gridview.
-     *
+     * you should swipe data in this method.
      * @param from item's original position
      * @param to   item's destination poisition
      */
     void onItemMoved(int from, int to);
 
     /**
-     * return whether the item can move.
+     * return true if the item of special position can not move.
      * @param position
      * @return
      */

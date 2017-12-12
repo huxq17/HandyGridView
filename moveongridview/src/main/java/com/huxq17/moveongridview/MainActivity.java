@@ -5,7 +5,9 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,24 +49,44 @@ public class MainActivity extends AppCompatActivity {
         mGridView = (MoveOnGridView) findViewById(R.id.id_gridview);
         GridViewAdapter adapter = new GridViewAdapter(this, strList);
         mGridView.setAdapter(adapter);
-//        mGridView.setMode(MoveOnGridView.MODE.LONG_PRESS);
+        mGridView.setMode(MoveOnGridView.MODE.LONG_PRESS);
         mGridView.setAutoOptimize(true);
         adapter.notifyDataSetChanged();
+        mGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//                if(mGridView.getMode()!= MoveOnGridView.MODE.TOUCH){//long press enter edit mode.
+//                    mGridView.setMode(MoveOnGridView.MODE.TOUCH);
+//                }
+                log("onItemLongClick");
+                return true;
+            }
+        });
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                log("onItemClick");
+            }
+        });
         mGridView.setOnItemCapturedListener(new OnItemCapturedListener() {
             @Override
             public void onItemCaptured(View v, int position) {
                 v.setScaleX(1.2f);
                 v.setScaleY(1.2f);
-                v.setAlpha(0.6f);
+//                v.setAlpha(0.6f);
             }
 
             @Override
             public void onItemReleased(View v, int position) {
                 v.setScaleX(1f);
                 v.setScaleY(1f);
-                v.setAlpha(1f);
+//                v.setAlpha(1f);
             }
 
         });
+    }
+
+    private void log(String msg) {
+        Log.e(getClass().getCanonicalName(), msg);
     }
 }
