@@ -58,14 +58,13 @@ public class MainActivity extends AppCompatActivity {
 //                if(mGridView.getMode()!= MoveOnGridView.MODE.TOUCH){//long press enter edit mode.
 //                    mGridView.setMode(MoveOnGridView.MODE.TOUCH);
 //                }
-                log("onItemLongClick");
                 return true;
             }
         });
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                log("onItemClick");
+                log("onItemClick position="+position);
             }
         });
         mGridView.setOnItemCapturedListener(new OnItemCapturedListener() {
