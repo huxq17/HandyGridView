@@ -121,6 +121,7 @@ public class MainActivity extends Activity {
     String paintText = "长按排序或删除";
     int textWidth;
     int textHeight;
+    StaticLayout tipsLayout;
 
     private void drawTips(Canvas canvas, int width, int height) {
         if (mTextPaint == null) {
@@ -133,10 +134,11 @@ public class MainActivity extends Activity {
         }
         width = width - textWidth;
         height = height - textHeight;
-        StaticLayout currentLayout = new StaticLayout(paintText, mTextPaint, width,
-                Layout.Alignment.ALIGN_NORMAL, 1.5f, 0f, false);
+        if (tipsLayout == null) {
+            tipsLayout = new StaticLayout(paintText, mTextPaint, width, Layout.Alignment.ALIGN_NORMAL, 1.5f, 0f, false);
+        }
         canvas.translate(width, height);
-        currentLayout.draw(canvas);
+        tipsLayout.draw(canvas);
     }
 
     public void change(View v) {
