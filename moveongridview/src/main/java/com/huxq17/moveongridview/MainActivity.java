@@ -3,8 +3,14 @@ package com.huxq17.moveongridview;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -21,6 +27,7 @@ public class MainActivity extends Activity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+    private TextPaint mTextPaint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +88,7 @@ public class MainActivity extends Activity {
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this,"click item at "+position,Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "click item at " + position, Toast.LENGTH_SHORT).show();
             }
         });
         mGridView.setOnItemCapturedListener(new OnItemCapturedListener() {
@@ -100,6 +107,36 @@ public class MainActivity extends Activity {
             }
 
         });
+        mGridView.setDrawer(new IDrawer() {
+            @Override
+            public void onDraw(Canvas canvas, int width, int height) {
+                int offsetX = -DensityUtil.dip2px(MainActivity.this, 10);
+                int offsetY = -DensityUtil.dip2px(MainActivity.this, 10);
+                //文字绘制于gridview的右下角，并向左，向上偏移10dp。
+                drawTips(canvas, width + offsetX, height + offsetY);
+            }
+        });
+    }
+
+    String paintText = "长按排序或删除";
+    int textWidth;
+    int textHeight;
+
+    private void drawTips(Canvas canvas, int width, int height) {
+        if (mTextPaint == null) {
+            mTextPaint = new TextPaint();
+            mTextPaint.setColor(Color.parseColor("#CFCFCF"));
+            mTextPaint.setTextSize(DensityUtil.dip2px(MainActivity.this, 12));
+            Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
+            textHeight = (int) (fontMetrics.bottom - fontMetrics.top) + 1;
+            textWidth = (int) mTextPaint.measureText(paintText) + 1;
+        }
+        width = width - textWidth;
+        height = height - textHeight;
+        StaticLayout currentLayout = new StaticLayout(paintText, mTextPaint, width,
+                Layout.Alignment.ALIGN_NORMAL, 1.5f, 0f, false);
+        canvas.translate(width, height);
+        currentLayout.draw(canvas);
     }
 
     public void change(View v) {

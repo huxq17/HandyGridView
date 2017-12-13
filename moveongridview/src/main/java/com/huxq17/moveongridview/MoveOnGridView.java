@@ -112,30 +112,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 }
             }
         });
-        loadDrawerIfNeed();
-    }
-
-    private TextPaint mTextPaint;
-
-    private void loadDrawerIfNeed() {
-        if (mDrawer == null) {
-            mDrawer = new IDrawer() {
-                @Override
-                public void onDraw(Canvas canvas, int width, int height) {
-                    if (mTextPaint == null) {
-                        mTextPaint = new TextPaint();
-                        mTextPaint.setColor(Color.parseColor("#CFCFCF"));
-                        mTextPaint.setTextSize(DensityUtil.dip2px(getContext(), 12));
-                    }
-                    width = width / 2;
-                    height = height / 2;
-                    StaticLayout currentLayout = new StaticLayout("长按排序或删除", mTextPaint, width,
-                            Layout.Alignment.ALIGN_NORMAL, 1.5f, 0f, false);
-                    canvas.translate(width, height);
-                    currentLayout.draw(canvas);
-                }
-            };
-        }
     }
 
     public void onGridViewVisible() {
