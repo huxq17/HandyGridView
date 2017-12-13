@@ -2,7 +2,6 @@ package com.huxq17.moveongridview;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,13 +40,9 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
         if (convertView == null) {
             textView = new TextView(context);
             convertView = textView;
-            textView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.e("onclick ","onclick");
-                }
-            });
-            textView.setPadding(20, 100, 20, 100);
+            textView.setSingleLine();
+            textView.setHeight(DensityUtil.dip2px(context, 40));
+//            textView.setPadding(20, 100, 20, 100);
 //            textView.setBackgroundColor(0x33ff00ff);
             Drawable drawable = context.getResources().getDrawable(R.drawable.s_grid_item);
             textView.setBackgroundDrawable(drawable);

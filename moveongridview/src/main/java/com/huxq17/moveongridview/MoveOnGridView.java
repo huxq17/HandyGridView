@@ -2,9 +2,16 @@ package com.huxq17.moveongridview;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.Nullable;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.DragEvent;
@@ -50,6 +57,13 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private int mDraggedPosition;
     private OnItemClickListener mOnItemClickListener;
     private boolean mShouldMove = false;
+    private boolean mUseSelector = false;
+    private boolean mAutoOptimize = true;
+    private MODE mode = MODE.NONE;
+
+    private Drawable mSelector;
+    private Drawable mSpaceDrawable;
+    private IDrawer mDrawer;
 
     public MoveOnGridView(Context context) {
         this(context, null);
@@ -58,16 +72,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     public MoveOnGridView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
-    }
-
-    @Override
-    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
-        mOnItemLongClickListener = listener;
-    }
-
-    @Override
-    public void setOnScrollListener(OnScrollListener l) {
-        mOnScrollListener = l;
     }
 
     private void init(Context context) {
@@ -108,10 +112,90 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 }
             }
         });
+        loadDrawerIfNeed();
+    }
+
+    private TextPaint mTextPaint;
+
+    private void loadDrawerIfNeed() {
+        if (mDrawer == null) {
+            mDrawer = new IDrawer() {
+                @Override
+                public void onDraw(Canvas canvas, int width, int height) {
+                    if (mTextPaint == null) {
+                        mTextPaint = new TextPaint();
+                        mTextPaint.setColor(Color.parseColor("#CFCFCF"));
+                        mTextPaint.setTextSize(DensityUtil.dip2px(getContext(), 12));
+                    }
+                    width = width / 2;
+                    height = height / 2;
+                    StaticLayout currentLayout = new StaticLayout("长按排序或删除", mTextPaint, width,
+                            Layout.Alignment.ALIGN_NORMAL, 1.5f, 0f, false);
+                    canvas.translate(width, height);
+                    currentLayout.draw(canvas);
+                }
+            };
+        }
     }
 
     public void onGridViewVisible() {
 //        mColumnsNum = getNumColumns();
+    }
+
+    @Override
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        mOnItemLongClickListener = listener;
+    }
+
+    @Override
+    public void setOnScrollListener(OnScrollListener l) {
+        mOnScrollListener = l;
+    }
+
+    /**
+     * If you want to draw something in gridview,just set a drawer.
+     *
+     * @param drawer a drawer.
+     * @see IDrawer#onDraw(Canvas, int, int)
+     */
+    public void setDrawer(IDrawer drawer) {
+        this.mDrawer = drawer;
+    }
+
+    /**
+     * Tells the GridView whether to use Selector.
+     * Nonuse selector by default.
+     *
+     * @param enabled true if use selector.
+     */
+    public void setSelectorEnabled(boolean enabled) {
+        if (enabled != mUseSelector) {
+            mUseSelector = enabled;
+            if (mUseSelector && mSelector != null) {
+                setSelector(mSelector);
+            }
+            if (!mUseSelector) {
+                setSelector(getSelector());
+            }
+        }
+
+    }
+
+    public boolean isSelectorEnabled() {
+        return mUseSelector;
+    }
+
+    @Override
+    public void setSelector(Drawable sel) {
+        if (mUseSelector) {
+            super.setSelector(sel);
+        } else {
+            mSelector = sel;
+            if (mSpaceDrawable == null) {
+                mSpaceDrawable = new ColorDrawable();
+            }
+            super.setSelector(mSpaceDrawable);
+        }
     }
 
     @Override
@@ -145,9 +229,23 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
             mItemMovedListener = (OnItemMovedListener) adapter;
         } else {
             //TODO should throw a exception here.
-            log("Your adapter should implements OnItemMovedListener for listening the change of item's position.");
+            log("Your adapter should implements OnItemMovedListener for listening  item's swap action.");
         }
         super.setAdapter(mAdapter);
+    }
+
+    /**
+     * When set, will change mode to LONG_PRESS if the content of gridview can not scroll.
+     * Set by default.
+     *
+     * @param autoOptimize
+     */
+    public void setAutoOptimize(boolean autoOptimize) {
+        mAutoOptimize = autoOptimize;
+    }
+
+    public void setMode(MODE mode) {
+        this.mode = mode;
     }
 
     public int getDragPosition() {
@@ -255,26 +353,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         return mode == MODE.LONG_PRESS;
     }
 
-    private boolean mAutoOptimize = true;
-
-    /**
-     * When set, will change mode to LONG_PRESS if the content of gridview can not scroll.
-     * Set by default.
-     *
-     * @param autoOptimize
-     */
-    public void setAutoOptimize(boolean autoOptimize) {
-        mAutoOptimize = autoOptimize;
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        super.dispatchTouchEvent(ev);
-        //TODO onTouchEvent重复调用
-//        getHitRect();
-        return onTouchEvent(ev);
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         return handleTouchEvent(ev);
@@ -286,15 +364,17 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         boolean handled = false;
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                log("down");
                 mLastMotionX = ev.getRawX();
                 mLastMotionY = ev.getRawY();
                 mShouldMove = false;
 //                Debug.startMethodTracing("MoveOnGridView");
                 if (isTouchMode()) {
                     recordDragViewIfNeeded(null, -1);
+                    invalidate();
+                    if (mDraggedView != null) {
+                        mDraggedView.setPressed(true);
+                    }
                 }
-//                super.onTouchEvent(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
                 int deltaX = (int) (ev.getRawX() - mLastMotionX);
@@ -304,6 +384,9 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                     // intercept the MotionEvent only when user is not scrolling
                     if (!mShouldMove) {
                         if (Math.abs(deltaX) > mTouchSlop || Math.abs(deltaY) > mTouchSlop) {
+                            if (mDraggedView.isPressed()) {
+                                mDraggedView.setPressed(false);
+                            }
                             mShouldMove = true;
                         }
                     } else {
@@ -319,15 +402,13 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                log("ACTION_UP");
 //                Debug.stopMethodTracing();
                 if (mDraggedView != null) {
                     releaseDraggedView();
                     mScrollRunner.cancel();
                     handled = true;
                 }
-                int motionPosition = getMotionPosition();
-                dispatchItemClicked(motionPosition);
+//                int motionPosition = getMotionPosition();
                 mDraggedView = null;
                 mCurrMotionEvent = null;
 //                super.onTouchEvent(ev);
@@ -342,7 +423,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         boolean handled = false;
-        if (isLongPressMode()) {
+        if (isLongPressMode() && !isFixedPosition(position)) {
             recordDragViewIfNeeded(view, position);
             handled = true;
         }
@@ -371,7 +452,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         } else {
             mDraggedPosition = position;
             mDraggedView = view;
-            view.setPressed(false);
             measureDraggedRect();
             mDraggedIndex = mDraggedPosition - mFirstVisibleFirstItem;
             dispatchItemCaptured();
@@ -384,6 +464,14 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         super.onLayout(changed, l, t, r, b);
         mGridViewVisibleRect = null;
         measureVisibleRect();
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        if (mDrawer != null) {
+            mDrawer.onDraw(canvas, getWidth(), getHeight());
+        }
     }
 
     /**
@@ -677,19 +765,14 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         mDraggedView.offsetLeftAndRight(offsetX);
         mDraggedView.offsetTopAndBottom(offsetY);
         dispatchItemReleased();
+        if (mDraggedView.isPressed()) {
+            mDraggedView.setPressed(false);
+        }
     }
 
     private void dispatchItemReleased() {
         if (mItemCapturedListener != null && !isFixedPosition(mDraggedPosition)) {
             mItemCapturedListener.onItemReleased(mDraggedView, mDraggedPosition);
-        }
-        dispatchItemClicked(mDraggedPosition);
-    }
-
-    private void dispatchItemClicked(int position) {
-        if (position != INVALID_POSITION && (isLongPressMode() && mDraggedView == null || !isLongPressMode()) && mOnItemClickListener != null) {
-            View view = getChildAt(position - mFirstVisibleFirstItem);
-            mOnItemClickListener.onItemClick(this, view, position, getItemIdAtPosition(mDraggedPosition));
         }
     }
 
@@ -716,21 +799,15 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         return order;
     }
 
-    private MODE mode = MODE.NONE;
-
-    public void setMode(MODE mode) {
-        this.mode = mode;
-    }
-
     public MODE getMode() {
         return mode;
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//        if (isLongPressMode() && mOnItemClickListener != null) {
-//            mOnItemClickListener.onItemClick(parent, view, position, id);
-//        }
+        if (mOnItemClickListener != null) {
+            mOnItemClickListener.onItemClick(parent, view, position, id);
+        }
     }
 
     public enum MODE {
