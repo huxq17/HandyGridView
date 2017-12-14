@@ -1,4 +1,4 @@
-package com.huxq17.moveongridview;
+package com.huxq17.moveongridview.scrollrunner;
 
 public interface OnItemMovedListener {
     /**

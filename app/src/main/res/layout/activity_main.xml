@@ -1,22 +1,51 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.moveongridview.CustomLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity">
+    android:background="#9983CC39"
+    android:clipChildren="false"
+    android:orientation="vertical">
 
-    <com.example.xiaolin.draggridview.DragGridView
-        android:id="@+id/drag_grid_view"
+    <com.huxq17.moveongridview.MoveOnGridView
+        android:id="@+id/grid_tips"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:clipToPadding="false"
         android:gravity="center"
-        android:horizontalSpacing="14dip"
-        android:numColumns="3"
+        android:horizontalSpacing="10dp"
+        android:numColumns="4"
+        android:paddingBottom="50dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="20dp"
         android:scrollbars="vertical"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="14.0px"/>
+        android:verticalSpacing="10dp" />
 
-</RelativeLayout>
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
+
+    <TextView
+        android:id="@+id/text_enable_selector"
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:background="@drawable/s_grid_item"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="selector已开启" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
+
+    <TextView
+        android:id="@+id/text_change_mode"
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:background="@drawable/s_grid_item"
+        android:gravity="center"
+        android:padding="5dp" />
+
+</com.example.moveongridview.CustomLinearLayout>

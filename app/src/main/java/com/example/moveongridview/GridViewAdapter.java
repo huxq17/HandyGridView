@@ -1,4 +1,4 @@
-package com.huxq17.moveongridview;
+package com.example.moveongridview;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+
+import com.huxq17.moveongridview.scrollrunner.OnItemMovedListener;
 
 import java.util.List;
 

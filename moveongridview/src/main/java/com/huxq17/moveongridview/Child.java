@@ -1,9 +1,7 @@
 package com.huxq17.moveongridview;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import com.huxq17.moveongridview.scrollrunner.ICarrier;
 import com.huxq17.moveongridview.scrollrunner.ScrollRunner;
@@ -26,7 +24,7 @@ public class Child implements ICarrier {
         this.parent = parent;
     }
 
-    public void move(final int offsetX, final int offsetY) {
+    private void move(final int offsetX, final int offsetY) {
         mRunner.start(offsetX, offsetY);
     }
 
@@ -44,11 +42,6 @@ public class Child implements ICarrier {
         }
     }
 
-    private void log(String msg) {
-        String str = getString();
-        Log.e("item", msg + ";str=" + str);
-    }
-
     @Override
     public void onDone() {
         int[] froms = new int[]{view.getLeft(), view.getTop()};
@@ -63,11 +56,6 @@ public class Child implements ICarrier {
             }
             hasNext = false;
         }
-    }
-
-    private String getString() {
-        TextView textView = (TextView) view;
-        return (String) textView.getText();
     }
 
     @Override

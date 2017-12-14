@@ -3,15 +3,10 @@ package com.huxq17.moveongridview;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.Nullable;
-import android.text.Layout;
-import android.text.StaticLayout;
-import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.DragEvent;
@@ -25,7 +20,9 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
 
+import com.huxq17.moveongridview.listener.OnItemCapturedListener;
 import com.huxq17.moveongridview.scrollrunner.ICarrier;
+import com.huxq17.moveongridview.scrollrunner.OnItemMovedListener;
 import com.huxq17.moveongridview.scrollrunner.ScrollRunner;
 import com.huxq17.moveongridview.utils.ReflectUtil;
 import com.huxq17.moveongridview.utils.SdkVerUtils;
@@ -211,7 +208,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     /**
-     * When set, will change mode to LONG_PRESS if the content of gridview can not scroll.
+     * When set, will change TOUCH mode to LONG_PRESS mode if the content of gridview can not scroll.
      * Set by default.
      *
      * @param autoOptimize
@@ -291,7 +288,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     private void addChild(int index, View view) {
-
         if (index < 0) {
             index = mChildren.size();
         }
@@ -532,6 +528,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     public int getTotalScrollY() {
+        if (mAdapter == null) return 0;
         int row = (mAdapter.getCount() - 1) / mColumnsNum + 1;
         int total = row * mRowHeight + (row - 1) * mVerticalSpacing;
         return total - getHeight();
@@ -707,7 +704,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         Log.e("moveongridview", msg);
     }
 
-    public void setOnItemClickListener(@Nullable OnItemClickListener listener) {
+    public void setOnItemClickListener(OnItemClickListener listener) {
         mOnItemClickListener = listener;
     }
 
@@ -762,14 +759,11 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     protected int getChildDrawingOrder(int childCount, int i) {
         int order = i;
         if (mDraggedView != null) {
-            mDraggedIndex = indexOfChild(mDraggedView);
-
+            mDraggedIndex = mDraggedPosition - mFirstVisibleFirstItem;
             if (i == mDraggedIndex) {
                 order = childCount - 1;
             } else if (i == childCount - 1) {
                 order = mDraggedIndex;
-            } else {
-                order = i;
             }
         }
         return order;
@@ -787,6 +781,28 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     public enum MODE {
-        TOUCH, LONG_PRESS, NONE
+        TOUCH, LONG_PRESS, NONE;
+
+        public static int indexOf(MODE mode) {
+            int index = -1;
+            for (MODE mode2 : MODE.values()) {
+                index++;
+                if (mode == mode2) {
+                    break;
+                }
+            }
+            return index;
+        }
+
+        public static MODE get(int index) {
+            int i = 0;
+            for (MODE mode : MODE.values()) {
+                if (i == index) {
+                    return mode;
+                }
+                i++;
+            }
+            return null;
+        }
     }
 }

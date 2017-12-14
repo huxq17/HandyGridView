@@ -1,4 +1,4 @@
-package com.huxq17.moveongridview;
+package com.example.moveongridview;
 
 import android.content.Context;
 
