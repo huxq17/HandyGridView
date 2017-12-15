@@ -347,6 +347,10 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         return mode == MODE.TOUCH;
     }
 
+    public boolean isNoneMode() {
+        return mode == MODE.NONE;
+    }
+
     public boolean isLongPressMode() {
         return mode == MODE.LONG_PRESS;
     }

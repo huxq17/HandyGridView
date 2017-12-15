@@ -74,8 +74,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                if (mGridView.getMode() != MoveOnGridView.MODE.TOUCH && !adapter.isFixed(position)) {//long press enter edit mode.
-                    log("long press to edit mode");
+                if (!mGridView.isTouchMode()&&!mGridView.isNoneMode() && !adapter.isFixed(position)) {//long press enter edit mode.
                     setMode(MoveOnGridView.MODE.TOUCH);
                     return true;
                 }
@@ -92,8 +91,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mGridView.setOnItemCapturedListener(new OnItemCapturedListener() {
             @Override
             public void onItemCaptured(View v, int position) {
-                String text = ((TextView) v).getText().toString();
-                log("onItemCaptured v.text=" + text + ";position=" + position);
                 v.setScaleX(1.2f);
                 v.setScaleY(1.2f);
             }
@@ -108,7 +105,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mGridView.setDrawer(new IDrawer() {
             @Override
             public void onDraw(Canvas canvas, int width, int height) {
-                if (mGridView.isTouchMode() || mGridView.isLongPressMode()) {
+                if (!mGridView.isNoneMode()) {
                     int offsetX = -DensityUtil.dip2px(MainActivity.this, 10);
                     int offsetY = -DensityUtil.dip2px(MainActivity.this, 10);
                     //文字绘制于gridview的右下角，并向左，向上偏移10dp。
