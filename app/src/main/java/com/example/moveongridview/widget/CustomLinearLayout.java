@@ -1,4 +1,4 @@
-package com.example.moveongridview;
+package com.example.moveongridview.widget;
 
 
 import android.content.Context;

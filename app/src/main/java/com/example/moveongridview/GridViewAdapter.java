@@ -6,8 +6,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.TextView;
 
+import com.example.moveongridview.widget.TagView;
 import com.huxq17.moveongridview.scrollrunner.OnItemMovedListener;
 
 import java.util.List;
@@ -19,6 +19,13 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
     public GridViewAdapter(Context context, List<String> dataList) {
         this.context = context;
         this.mDatas = dataList;
+    }
+
+    private boolean inEditMode = false;
+
+    public void setInEditMode(boolean inEditMode) {
+        this.inEditMode = inEditMode;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -38,20 +45,20 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        TextView textView;
+        TagView textView;
         if (convertView == null) {
-            textView = new TextView(context);
+            textView = new TagView(context);
             convertView = textView;
-            textView.setSingleLine();
+            textView.setLines(1);
             textView.setHeight(DensityUtil.dip2px(context, 40));
-//            textView.setPadding(20, 100, 20, 100);
-//            textView.setBackgroundColor(0x33ff00ff);
-            Drawable drawable = context.getResources().getDrawable(R.drawable.s_grid_item);
+            int id = context.getResources().getIdentifier("s_grid_item", "drawable", context.getPackageName());
+            Drawable drawable = context.getResources().getDrawable(id);
             textView.setBackgroundDrawable(drawable);
             textView.setGravity(Gravity.CENTER);
         } else {
-            textView = (TextView) convertView;
+            textView = (TagView) convertView;
         }
+        textView.showDeleteIcon(inEditMode);
         textView.setText(getItem(position));
         return convertView;
     }

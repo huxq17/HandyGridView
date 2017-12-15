@@ -13,7 +13,9 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +24,7 @@ import com.huxq17.moveongridview.MoveOnGridView;
 import com.huxq17.moveongridview.listener.OnItemCapturedListener;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends Activity implements View.OnClickListener {
@@ -33,7 +36,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    private TextView enableSelectorTv, changeModeTv;
+    private TextView enableSelectorTv, changeModeTv, addTagTv;
+    private Button recoveryTagTv;
+    private GridViewAdapter adapter;
+    private ViewGroup outLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +49,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         initView();
         int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
             ActivityCompat.requestPermissions(
                     this,
                     PERMISSIONS_STORAGE,
@@ -55,19 +60,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void initView() {
         enableSelectorTv = findViewById(R.id.text_enable_selector);
         changeModeTv = findViewById(R.id.text_change_mode);
+        addTagTv = findViewById(R.id.text_add_tag);
+        recoveryTagTv = findViewById(R.id.text_recovery_tag);
+        outLayout = findViewById(R.id.out_layout);
+
         mGridView = findViewById(R.id.grid_tips);
-        final GridViewAdapter adapter = new GridViewAdapter(this, strList);
+        adapter = new GridViewAdapter(this, strList);
         mGridView.setAdapter(adapter);
+
         setMode(MoveOnGridView.MODE.LONG_PRESS);
-        mGridView.setAutoOptimize(true);
+        mGridView.setAutoOptimize(false);
 //        adapter.notifyDataSetChanged();
         mGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-//                if (mGridView.getMode() != MoveOnGridView.MODE.TOUCH && !adapter.isFixed(position)) {//long press enter edit mode.
-//                    mGridView.setMode(MoveOnGridView.MODE.TOUCH);
-//                    return true;
-//                }
+                if (mGridView.getMode() != MoveOnGridView.MODE.TOUCH && !adapter.isFixed(position)) {//long press enter edit mode.
+                    log("long press to edit mode");
+                    setMode(MoveOnGridView.MODE.TOUCH);
+                    return true;
+                }
                 return false;
             }
         });
@@ -81,16 +92,16 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mGridView.setOnItemCapturedListener(new OnItemCapturedListener() {
             @Override
             public void onItemCaptured(View v, int position) {
+                String text = ((TextView) v).getText().toString();
+                log("onItemCaptured v.text=" +text + ";position=" + position);
                 v.setScaleX(1.2f);
                 v.setScaleY(1.2f);
-//                v.setAlpha(0.6f);
             }
 
             @Override
             public void onItemReleased(View v, int position) {
                 v.setScaleX(1f);
                 v.setScaleY(1f);
-//                v.setAlpha(1f);
             }
 
         });
@@ -104,8 +115,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         });
         enableSelectorTv.setOnClickListener(this);
-        enableSelectorTv.performClick();
+//        enableSelectorTv.performClick();
         changeModeTv.setOnClickListener(this);
+        addTagTv.setOnClickListener(this);
+        recoveryTagTv.setOnClickListener(this);
     }
 
     String paintText = "长按排序或删除";
@@ -150,12 +163,40 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 //有三种模式分别是点击拖动，长按拖动和不拖动，分别对应的是TOUCH,LONG_PRESS和NONE
                 setMode(MoveOnGridView.MODE.get(index));
                 break;
+            case R.id.text_add_tag:
+                addTag();
+                break;
+            case R.id.text_recovery_tag:
+                moveTaskToBack(true);
+                recoveryTag();
+                break;
         }
+    }
+
+    private void recoveryTag() {
+        for (Iterator<String> iter = strList.iterator(); iter.hasNext(); ) {
+            String str = iter.next();
+            if (str.equals("更多")) {
+                iter.remove();
+            }
+        }
+        adapter.notifyDataSetChanged();
+        outLayout.setClipChildren(false);
+    }
+
+    private void addTag() {
+        for (int i = 0; i < 4; i++) {
+            strList.add("更多");
+        }
+        adapter.notifyDataSetChanged();
+        outLayout.setClipChildren(true);
+        mGridView.smoothScrollToPosition(adapter.getCount() - 1);
     }
 
     private void setMode(MoveOnGridView.MODE mode) {
         mGridView.setMode(mode);
         changeModeTv.setText(mode.toString());
+        adapter.setInEditMode(mode == MoveOnGridView.MODE.TOUCH);
     }
 
     private void log(String msg) {

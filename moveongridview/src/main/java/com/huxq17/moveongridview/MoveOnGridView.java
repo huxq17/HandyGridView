@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -19,6 +18,7 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
+import android.widget.TextView;
 
 import com.huxq17.moveongridview.listener.OnItemCapturedListener;
 import com.huxq17.moveongridview.scrollrunner.ICarrier;
@@ -51,7 +51,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private int mColumnWidth, mRowHeight, mColumnsNum;
     private int mHorizontalSpacing;
     private int mVerticalSpacing;
-    private int mDraggedPosition;
+    private int mDraggedPosition = INVALID_POSITION;
     private OnItemClickListener mOnItemClickListener;
     private boolean mShouldMove = false;
     private boolean mUseSelector = false;
@@ -76,6 +76,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         setChildrenDrawingOrderEnabled(true);
         super.setOnItemLongClickListener(this);
         super.setOnItemClickListener(this);
+        setOverScrollMode(OVER_SCROLL_NEVER);
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mChildren = new Children(this);
         super.setOnScrollListener(new OnScrollListener() {
@@ -221,6 +222,15 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         this.mode = mode;
     }
 
+    /**
+     * set the number of pixels scrolled per second
+     *
+     * @param scrollSpeed
+     */
+    public void setScrollSpeed(int scrollSpeed) {
+        mScrollSpeed = scrollSpeed;
+    }
+
     public int getDragPosition() {
         return mDraggedPosition;
     }
@@ -239,8 +249,31 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     @Override
-    public boolean dispatchDragEvent(DragEvent event) {
-        return super.dispatchDragEvent(event);
+    protected void layoutChildren() {
+        log("layoutChildren ");
+        super.layoutChildren();
+        if (mDraggedView != null) {
+            final View oldDraggedView = mDraggedView;
+            mDraggedView = null;
+            refreshChildren();
+            View draggedView = getChildAt(mDraggedPosition - mFirstVisibleFirstItem);
+            mDraggedView = oldDraggedView;
+            dispatchItemReleased();
+            String text1 = ((TextView) mChildren.get(mDraggedPosition).view).getText().toString();
+            String text2 = ((TextView) draggedView).getText().toString();
+            mDraggedView = draggedView;
+            dispatchItemCaptured();
+        } else {
+            refreshChildren();
+        }
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        log("onlayout");
+        super.onLayout(changed, l, t, r, b);
+        mGridViewVisibleRect = null;
+        measureVisibleRect();
     }
 
     @Override
@@ -352,6 +385,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 int deltaX = (int) (ev.getRawX() - mLastMotionX);
                 int deltaY = (int) (ev.getRawY() - mLastMotionY);
                 if (mDraggedView != null) {
+                    String text = ((TextView) mDraggedView).getText().toString();
                     handled = true;
                     // intercept the MotionEvent only when user is not scrolling
                     if (!mShouldMove) {
@@ -396,6 +430,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         boolean handled = false;
         if (isLongPressMode() && !isFixedPosition(position)) {
+            log("onItemLongClick position=" + position + ";pointToPosition=" + getMotionPosition());
             recordDragViewIfNeeded(view, position);
             handled = true;
         }
@@ -432,27 +467,11 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        super.onLayout(changed, l, t, r, b);
-        mGridViewVisibleRect = null;
-        measureVisibleRect();
-    }
-
-    @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
         if (mDrawer != null) {
             mDrawer.onDraw(canvas, getWidth(), getHeight());
         }
-    }
-
-    /**
-     * set the number of pixels scrolled per second
-     *
-     * @param scrollSpeed
-     */
-    public void setScrollSpeed(int scrollSpeed) {
-        mScrollSpeed = scrollSpeed;
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -644,12 +663,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     }
 
     @Override
-    protected void layoutChildren() {
-        super.layoutChildren();
-        refreshChildren();
-    }
-
-    @Override
     public View getChildAt(int index) {
         int position = index;
         final int childCount = getChildCount();
@@ -803,6 +816,20 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 i++;
             }
             return null;
+        }
+
+        @Override
+        public String toString() {
+            String name = name();
+            switch (name) {
+                case "TOUCH":
+                    return "编辑模式";
+                case "LONG_PRESS":
+                    return "长按拖拽模式";
+                case "NONE":
+                    return "普通模式";
+            }
+            return super.toString();
         }
     }
 }

@@ -36,11 +36,20 @@ public class Children {
         return mChild.get(index);
     }
 
+    public int indexOf(View v) {
+        Child child = container.get(v);
+        if (child == null) {
+            return -2;
+        }
+        return mChild.indexOf(child);
+    }
+
     public int size() {
         return mChild.size();
     }
 
     public void clear() {
+        container.clear();
         mChild.clear();
     }
 }
