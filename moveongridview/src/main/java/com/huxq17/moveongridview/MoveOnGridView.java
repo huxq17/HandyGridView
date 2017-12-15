@@ -244,23 +244,17 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
         int childCount = getChildCount();
         clearAllChildren();
         for (int i = 0; i < childCount; i++) {
-            addChild(i, getChildAt(i));
+            addChild(i, super.getChildAt(i));
         }
     }
 
     @Override
     protected void layoutChildren() {
-        log("layoutChildren ");
         super.layoutChildren();
         if (mDraggedView != null) {
-            final View oldDraggedView = mDraggedView;
-            mDraggedView = null;
             refreshChildren();
-            View draggedView = getChildAt(mDraggedPosition - mFirstVisibleFirstItem);
-            mDraggedView = oldDraggedView;
+            View draggedView = super.getChildAt(mDraggedPosition - mFirstVisibleFirstItem);
             dispatchItemReleased();
-            String text1 = ((TextView) mChildren.get(mDraggedPosition).view).getText().toString();
-            String text2 = ((TextView) draggedView).getText().toString();
             mDraggedView = draggedView;
             dispatchItemCaptured();
         } else {
@@ -270,7 +264,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        log("onlayout");
         super.onLayout(changed, l, t, r, b);
         mGridViewVisibleRect = null;
         measureVisibleRect();
@@ -389,12 +382,16 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                     handled = true;
                     // intercept the MotionEvent only when user is not scrolling
                     if (!mShouldMove) {
-                        if (Math.abs(deltaX) > mTouchSlop || Math.abs(deltaY) > mTouchSlop) {
-                            if (mDraggedView.isPressed()) {
-                                mDraggedView.setPressed(false);
-                            }
-                            mShouldMove = true;
+//                        if (Math.abs(deltaX) > mTouchSlop || Math.abs(deltaY) > mTouchSlop) {
+//                            if (mDraggedView.isPressed()) {
+//                                mDraggedView.setPressed(false);
+//                            }
+//                            mShouldMove = true;
+//                        }
+                        if (mDraggedView.isPressed()) {
+                            mDraggedView.setPressed(false);
                         }
+                        mShouldMove = true;
                     } else {
                         mLastMotionX = ev.getRawX();
                         mLastMotionY = ev.getRawY();
@@ -430,7 +427,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         boolean handled = false;
         if (isLongPressMode() && !isFixedPosition(position)) {
-            log("onItemLongClick position=" + position + ";pointToPosition=" + getMotionPosition());
             recordDragViewIfNeeded(view, position);
             handled = true;
         }

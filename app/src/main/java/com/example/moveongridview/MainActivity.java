@@ -93,7 +93,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             @Override
             public void onItemCaptured(View v, int position) {
                 String text = ((TextView) v).getText().toString();
-                log("onItemCaptured v.text=" +text + ";position=" + position);
+                log("onItemCaptured v.text=" + text + ";position=" + position);
                 v.setScaleX(1.2f);
                 v.setScaleY(1.2f);
             }
@@ -167,7 +167,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 addTag();
                 break;
             case R.id.text_recovery_tag:
-                moveTaskToBack(true);
+//                moveTaskToBack(true);
                 recoveryTag();
                 break;
         }
@@ -180,6 +180,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 iter.remove();
             }
         }
+        setMode(MoveOnGridView.MODE.LONG_PRESS);
         adapter.notifyDataSetChanged();
         outLayout.setClipChildren(false);
     }

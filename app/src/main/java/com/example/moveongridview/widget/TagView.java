@@ -48,10 +48,4 @@ public class TagView extends android.support.v7.widget.AppCompatTextView {
 ////        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 //        Log.e("onmea","width="+getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec)+";height="+getDefaultSize(getSuggestedMinimumHeight(),heightMeasureSpec));
 //    }
-
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-
-    }
 }

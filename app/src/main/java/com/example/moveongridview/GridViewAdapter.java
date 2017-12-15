@@ -58,7 +58,11 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
         } else {
             textView = (TagView) convertView;
         }
-        textView.showDeleteIcon(inEditMode);
+        if (!isFixed(position)) {
+            textView.showDeleteIcon(inEditMode);
+        } else {
+            textView.showDeleteIcon(false);
+        }
         textView.setText(getItem(position));
         return convertView;
     }
