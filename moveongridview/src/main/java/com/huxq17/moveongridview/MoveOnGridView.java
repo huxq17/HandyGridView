@@ -257,6 +257,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
             dispatchItemReleased();
             mDraggedView = draggedView;
             dispatchItemCaptured();
+            correctDraggedViewLocation(0, 0);
         } else {
             refreshChildren();
         }
