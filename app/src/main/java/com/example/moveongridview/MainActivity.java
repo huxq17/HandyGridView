@@ -108,10 +108,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mGridView.setDrawer(new IDrawer() {
             @Override
             public void onDraw(Canvas canvas, int width, int height) {
-                int offsetX = -DensityUtil.dip2px(MainActivity.this, 10);
-                int offsetY = -DensityUtil.dip2px(MainActivity.this, 10);
-                //文字绘制于gridview的右下角，并向左，向上偏移10dp。
-                drawTips(canvas, width + offsetX, height + offsetY);
+                if (mGridView.isTouchMode() || mGridView.isLongPressMode()) {
+                    int offsetX = -DensityUtil.dip2px(MainActivity.this, 10);
+                    int offsetY = -DensityUtil.dip2px(MainActivity.this, 10);
+                    //文字绘制于gridview的右下角，并向左，向上偏移10dp。
+                    drawTips(canvas, width + offsetX, height + offsetY);
+                }
             }
         });
         enableSelectorTv.setOnClickListener(this);
