@@ -112,7 +112,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     drawTips(canvas, width + offsetX, height + offsetY);
                 }
             }
-        });
+        },false);
         enableSelectorTv.setOnClickListener(this);
 //        enableSelectorTv.performClick();
         changeModeTv.setOnClickListener(this);
@@ -180,7 +180,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }
         setMode(MoveOnGridView.MODE.LONG_PRESS);
-        adapter.notifyDataSetChanged();
+       adapter.setData(strList);
         outLayout.setClipChildren(false);
     }
 
@@ -188,7 +188,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         for (int i = 0; i < 4; i++) {
             strList.add("更多");
         }
-        adapter.notifyDataSetChanged();
+        adapter.setData(strList);
         outLayout.setClipChildren(true);
         mGridView.smoothScrollToPosition(adapter.getCount() - 1);
     }

@@ -2,6 +2,7 @@ package com.example.moveongridview;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,19 +10,27 @@ import android.widget.BaseAdapter;
 
 import com.example.moveongridview.widget.TagView;
 import com.huxq17.moveongridview.scrollrunner.OnItemMovedListener;
+import com.huxq17.moveongridview.utils.Pools;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener {
+public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener, TagView.OnTagDeleteListener {
     private Context context;
-    private List<String> mDatas;
+    private List<String> mDatas = new ArrayList<>();
 
     public GridViewAdapter(Context context, List<String> dataList) {
         this.context = context;
-        this.mDatas = dataList;
+        this.mDatas.addAll(dataList);
     }
 
     private boolean inEditMode = false;
+
+    public void setData(List<String> dataList) {
+        this.mDatas.clear();
+        this.mDatas.addAll(dataList);
+        notifyDataSetChanged();
+    }
 
     public void setInEditMode(boolean inEditMode) {
         this.inEditMode = inEditMode;
@@ -64,6 +73,7 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
             textView.showDeleteIcon(false);
         }
         textView.setText(getItem(position));
+        textView.setOnTagDeleteListener(position, this);
         return convertView;
     }
 
@@ -79,5 +89,11 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener 
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onDelete(int position) {
+        mDatas.remove(position);
+        notifyDataSetChanged();
     }
 }

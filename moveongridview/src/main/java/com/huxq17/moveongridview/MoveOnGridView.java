@@ -61,6 +61,7 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     private Drawable mSelector;
     private Drawable mSpaceDrawable;
     private IDrawer mDrawer;
+    private boolean mDrawOnTop = false;
 
     public MoveOnGridView(Context context) {
         this(context, null);
@@ -129,11 +130,13 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
     /**
      * If you want to draw something in gridview,just set a drawer.
      *
-     * @param drawer a drawer.
+     * @param drawer    a drawer.
+     * @param drawOnTop true if you want draw on the top of Gridview.
      * @see IDrawer#onDraw(Canvas, int, int)
      */
-    public void setDrawer(IDrawer drawer) {
+    public void setDrawer(IDrawer drawer, boolean drawOnTop) {
         this.mDrawer = drawer;
+        mDrawOnTop = drawOnTop;
     }
 
     /**
@@ -469,9 +472,20 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
+        if (!mDrawOnTop) {
+            drawSomeThing(canvas);
+        }
         super.dispatchDraw(canvas);
+        if (mDrawOnTop) {
+            drawSomeThing(canvas);
+        }
+    }
+
+    private void drawSomeThing(Canvas canvas) {
         if (mDrawer != null) {
+            canvas.save();
             mDrawer.onDraw(canvas, getWidth(), getHeight());
+            canvas.restore();
         }
     }
 
