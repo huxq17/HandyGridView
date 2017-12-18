@@ -1,7 +1,7 @@
 # HandyGridView
 
 HandyGridView本质上是一个GridView，所以你也可以当成普通的GridView来使用，HandyGridView继承了GridView并在此之上添加了item拖动和交换，绘制图文等功能。
-由于只是一个GridView，所以综合性能比目前其他的可拖动的gridview解决方案都要好。
+由于只是一个GridView，所以性能比目前其他的可拖动的gridview解决方案都要好。
 
 ---
 
