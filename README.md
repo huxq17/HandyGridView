@@ -7,7 +7,7 @@ HandyGridView本质上是一个GridView，所以你也可以当成普通的GridV
 
 ### 效果图
 
- <img src="art/gif1.gif" width="280" height="475" />
+ <img src="art/art.gif" width="280" height="475" />
 
 ---
 ### Usage
