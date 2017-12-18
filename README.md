@@ -16,9 +16,13 @@ HandyGridView本质上是一个GridView，所以你也可以当成普通的GridV
 
 #### HandyGridView的三种模式：
 
-- TOUCH，编辑模式，此模式下item可以自由拖动;
-- LONG_PRESS, 长按拖动模式，此模式下item在长按以后可以自由拖动;
-- NONE, 此模式下item不可拖动，可当成正常的GridView使用,示例如下：
+Mode | introduction 
+---|---
+TOUCH | 编辑模式，此模式下item可以自由拖动
+LONG_PRESS | 长按拖动模式，此模式下item在长按以后可以自由拖动
+NONE | 此模式下item不可拖动，可当成正常的GridView使用
+
+示例如下：
 
 ```
 HandyGridView#setMode(TOUCH|LONG_PRESS|NONE);
