@@ -2,7 +2,6 @@ package com.example.moveongridview;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +9,6 @@ import android.widget.BaseAdapter;
 
 import com.example.moveongridview.widget.TagView;
 import com.huxq17.moveongridview.scrollrunner.OnItemMovedListener;
-import com.huxq17.moveongridview.utils.Pools;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +56,7 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener,
         if (convertView == null) {
             textView = new TagView(context);
             convertView = textView;
-            textView.setLines(1);
+            textView.setMaxLines(1);
             textView.setHeight(DensityUtil.dip2px(context, 40));
             int id = context.getResources().getIdentifier("s_grid_item", "drawable", context.getPackageName());
             Drawable drawable = context.getResources().getDrawable(id);

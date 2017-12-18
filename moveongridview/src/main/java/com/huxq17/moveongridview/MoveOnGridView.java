@@ -18,8 +18,8 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListAdapter;
-import android.widget.TextView;
 
+import com.huxq17.moveongridview.listener.IDrawer;
 import com.huxq17.moveongridview.listener.OnItemCapturedListener;
 import com.huxq17.moveongridview.scrollrunner.ICarrier;
 import com.huxq17.moveongridview.scrollrunner.OnItemMovedListener;
@@ -386,7 +386,6 @@ public class MoveOnGridView extends GridView implements AdapterView.OnItemLongCl
                 int deltaX = (int) (ev.getRawX() - mLastMotionX);
                 int deltaY = (int) (ev.getRawY() - mLastMotionY);
                 if (mDraggedView != null) {
-                    String text = ((TextView) mDraggedView).getText().toString();
                     handled = true;
                     // intercept the MotionEvent only when user is not scrolling
                     if (!mShouldMove) {

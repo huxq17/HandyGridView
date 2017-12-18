@@ -19,7 +19,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.huxq17.moveongridview.IDrawer;
+import com.huxq17.moveongridview.listener.IDrawer;
 import com.huxq17.moveongridview.MoveOnGridView;
 import com.huxq17.moveongridview.listener.OnItemCapturedListener;
 
@@ -175,7 +175,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void recoveryTag() {
         for (Iterator<String> iter = strList.iterator(); iter.hasNext(); ) {
             String str = iter.next();
-            if (str.equals("更多")) {
+            if (str.contains("更多")) {
                 iter.remove();
             }
         }
@@ -186,7 +186,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private void addTag() {
         for (int i = 0; i < 4; i++) {
-            strList.add("更多");
+            strList.add("更多 "+(strList.size()-1));
         }
         adapter.setData(strList);
         outLayout.setClipChildren(true);
@@ -214,7 +214,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         strList.add("娱乐");
         strList.add("段子");
         strList.add("跟帖");
-        strList.add("活力东奥学院");
+        strList.add("活力学院");
         strList.add("北京");
         strList.add("社会");
         strList.add("军事");
