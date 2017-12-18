@@ -28,7 +28,6 @@ NONE | 此模式下item不可拖动，可当成正常的GridView使用
 HandyGridView#setMode(TOUCH|LONG_PRESS|NONE);
 
 ```
----
 
 #### Adapter
 
@@ -54,7 +53,6 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener�
 ｝
 ```
 
----
 #### 绘制图文
 HandyGridView提供了在gridview上绘制图文的接口，示例如下：
 
@@ -90,9 +88,12 @@ HandyGridView提供了在gridview上绘制图文的接口，示例如下：
     }
 
 ```
----
+
 
 以上就是主要的用法了,[更多的用法可以参考example](https://github.com/huxq17/HandyGridView/blob/master/app/src/main/java/com/handygridview/example/MainActivity.java).
+
+
+---
 
 ### LICENSE
 
