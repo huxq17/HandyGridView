@@ -1,1 +1,1 @@
-include ':app', ':moveongridview'
+include ':app', ':handygridview'

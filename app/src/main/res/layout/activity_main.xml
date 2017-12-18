@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.moveongridview.widget.CustomLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.handygridview.example.widget.CustomLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/out_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,7 +7,7 @@
     android:clipChildren="false"
     android:orientation="vertical">
 
-    <com.huxq17.moveongridview.MoveOnGridView
+    <com.huxq17.handygridview.HandyGridView
         android:id="@+id/grid_tips"
         android:layout_width="match_parent"
         android:layout_height="300dp"
@@ -81,4 +81,4 @@
             android:text="复原" />
     </LinearLayout>
 
-</com.example.moveongridview.widget.CustomLinearLayout>
+</com.handygridview.example.widget.CustomLinearLayout>
