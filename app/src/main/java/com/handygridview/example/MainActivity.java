@@ -70,6 +70,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         setMode(HandyGridView.MODE.LONG_PRESS);
         mGridView.setAutoOptimize(false);
+        //当gridview可以滚动并且被拖动的item位于gridview的顶部或者底部时，设置gridview滚屏的速度，
+        // 每秒移动的像素点个数，默认750，可不设置。
+        mGridView.setScrollSpeed(750);
 //        adapter.notifyDataSetChanged();
         mGridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override

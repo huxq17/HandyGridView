@@ -226,7 +226,7 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
     }
 
     /**
-     * set the number of pixels scrolled per second
+     * set the number of pixels gridview scrolled per second.
      *
      * @param scrollSpeed
      */

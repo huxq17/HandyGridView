@@ -83,6 +83,7 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener,
 
     @Override
     public boolean isFixed(int position) {
+        //此时0位置为固定的，不可拖动
         if (position == 0) {
             return true;
         }
