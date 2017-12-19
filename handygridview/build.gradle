@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-
 android {
     compileSdkVersion 26
     buildToolsVersion '26.0.1'
@@ -27,3 +26,14 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 }
+//for upload jar
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+    }
+}
+apply from: 'gradle-jcenter-push.gradle'
+

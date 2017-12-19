@@ -84,7 +84,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 return false;
             }
         });
-//        mGridView.bringToFront();
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

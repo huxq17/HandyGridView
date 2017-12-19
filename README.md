@@ -5,6 +5,8 @@
 HandyGridView本质上是一个GridView，所以你也可以当成普通的GridView来使用，HandyGridView继承了GridView并在此之上添加了item拖动和交换，绘制图文等功能。
 由于只是一个GridView，所以性能比目前其他大部分解决方案都要好。
 
+HandyGridview is a high-performance drag and drop gridview, it extends GridView, you can drag drop gridview item to sort the labels,and draw something on the gridview. Just use the HandyGridview like a GridView.
+
 ---
 
 ### 效果图
@@ -14,17 +16,26 @@ HandyGridView本质上是一个GridView，所以你也可以当成普通的GridV
 ---
 ### Usage
 
+#### Gradle
+
+```groovy
+dependencies {
+   compile 'com.huxq17.handygridview:handygridview:1.0.0'
+
+}
+```
+
 #### minSdkVersion 11
 
-#### HandyGridView的三种模式：
+#### HandyGridView's three modes：
 
-Mode | introduction 
+Mode | introduction
 ---|---
-TOUCH | 编辑模式，此模式下item可以自由拖动
-LONG_PRESS | 长按拖动模式，此模式下item在长按以后可以自由拖动
-NONE | 此模式下item不可拖动，可当成正常的GridView使用
+TOUCH | Edit mode，the item can be dragged
+LONG_PRESS | Long press mode，item can be dragged after long press.
+NONE | Item can not be dragged, jsut like normal GridView.
 
-示例如下：
+Usage：
 
 ```
 HandyGridView#setMode(TOUCH|LONG_PRESS|NONE);
@@ -34,6 +45,8 @@ HandyGridView#setMode(TOUCH|LONG_PRESS|NONE);
 #### Adapter
 
 HandyGridView会在item被拖动交换时发出通知，如果想要做出对应数据上的变化，则可以在Apdater中实现OnItemMovedListener，示例如下：
+
+HandyGridView will send a notification to notify you swip the data source when its item's order is changed.the usage is as follows:
 
 ```
 
@@ -46,7 +59,7 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener�
 
     @Override
     public boolean isFixed(int position) {
-        //此时0位置为固定的，不可拖动
+        //When postion==0,the item can not be dragged.
         if (position == 0) {
             return true;
         }
@@ -58,6 +71,8 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener�
 #### 绘制图文
 HandyGridView提供了在gridview上绘制图文的接口，示例如下：
 
+You can draw something on HandyGridView,the usage is as follows:
+
 ```
     mGridView.setDrawer(new IDrawer() {
             @Override
@@ -66,6 +81,7 @@ HandyGridView提供了在gridview上绘制图文的接口，示例如下：
                     int offsetX = -DensityUtil.dip2px(MainActivity.this, 10);
                     int offsetY = -DensityUtil.dip2px(MainActivity.this, 10);
                     //文字绘制于gridview的右下角，并向左，向上偏移10dp。
+                    //Draw text on the right-bottom of GridView.
                     drawTips(canvas, width + offsetX, height + offsetY);
                 }
             }
@@ -93,6 +109,9 @@ HandyGridView提供了在gridview上绘制图文的接口，示例如下：
 
 
 以上就是主要的用法了,[更多的用法可以参考example](https://github.com/huxq17/HandyGridView/blob/master/app/src/main/java/com/handygridview/example/MainActivity.java).
+
+The above is the main usage,[click to get more  usage](https://github.com/huxq17/HandyGridView/blob/master/app/src/main/java/com/handygridview/example/MainActivity.java).
+
 
 
 ---
