@@ -9,7 +9,7 @@ HandyGridview is a high-performance drag and drop gridview, it extends GridView,
 
 ---
 
-### 效果图
+### Screenshots
 
  <img src="art/art.gif" width="280" height="475" />
 
@@ -46,7 +46,7 @@ HandyGridView#setMode(TOUCH|LONG_PRESS|NONE);
 
 HandyGridView会在item被拖动交换时发出通知，如果想要做出对应数据上的变化，则可以在Apdater中实现OnItemMovedListener，示例如下：
 
-HandyGridView will send a notification to notify you swip the data source when its item's order is changed.the usage is as follows:
+HandyGridView will send a notification to notify you swip the data source when its item's order is changed. the usage is as follows:
 
 ```
 
@@ -71,7 +71,7 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener�
 #### 绘制图文
 HandyGridView提供了在gridview上绘制图文的接口，示例如下：
 
-You can draw something on HandyGridView,the usage is as follows:
+You can draw something on HandyGridView, the usage is as follows:
 
 ```
     mGridView.setDrawer(new IDrawer() {
