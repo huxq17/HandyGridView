@@ -132,7 +132,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void drawTips(Canvas canvas, int width, int height) {
         if (mTextPaint == null) {
             mTextPaint = new TextPaint();
-            mTextPaint.setColor(Color.parseColor("#CFCFCF"));
+            mTextPaint.setColor(Color.parseColor("#cccccc"));
             mTextPaint.setTextSize(DensityUtil.dip2px(MainActivity.this, 12));
             Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
             textHeight = (int) (fontMetrics.bottom - fontMetrics.top) + 1;

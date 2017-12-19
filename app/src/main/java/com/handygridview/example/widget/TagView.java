@@ -4,8 +4,10 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ViewTreeObserver;
 
 import com.handygridview.example.DensityUtil;
 import com.handygridview.example.R;
@@ -24,16 +26,22 @@ public class TagView extends android.support.v7.widget.AppCompatTextView {
         super(context);
 //        int id = context.getResources().getIdentifier("ic_delete", "drawable", context.getPackageName());
         deleteIcon = context.getResources().getDrawable(R.drawable.ic_delete);
-        iconWidth = deleteIcon.getIntrinsicWidth();
-        iconHeight = deleteIcon.getIntrinsicHeight();
-        //如果不想icon向左上方向偏移一半，则直接赋值0即可。
-        int left = -iconWidth / 2;
-        int top = -iconHeight / 2;
-        mDelteRect = new Rect(left, top, left + iconWidth, top + iconHeight);
-        //padding扩大了icon的点击范围
-        int padding = DensityUtil.dip2px(context, 10);
-        mAssumeDelteRect = new Rect(mDelteRect.left, mDelteRect.top, mDelteRect.left + iconWidth + padding, mDelteRect.top + iconHeight + padding);
-        deleteIcon.setBounds(mDelteRect);
+        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                setDeleteBounds();
+                removeViewTreeObserver(this);
+            }
+        });
+    }
+
+    @SuppressWarnings("deprecation")
+    public void removeViewTreeObserver(ViewTreeObserver.OnGlobalLayoutListener listener) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+            getViewTreeObserver().removeGlobalOnLayoutListener(listener);
+        } else {
+            getViewTreeObserver().removeOnGlobalLayoutListener(listener);
+        }
     }
 
     @Override
@@ -42,6 +50,18 @@ public class TagView extends android.support.v7.widget.AppCompatTextView {
         if (showIcon) {
             deleteIcon.draw(canvas);
         }
+    }
+
+    private void setDeleteBounds() {
+        iconWidth = deleteIcon.getIntrinsicWidth();
+        iconHeight = deleteIcon.getIntrinsicHeight();
+        int left = getWidth() - iconWidth;
+        int top = 0;
+        mDelteRect = new Rect(left, top, left + iconWidth, top + iconHeight);
+        //padding扩大了icon的点击范围
+        int padding = DensityUtil.dip2px(getContext(), 10);
+        mAssumeDelteRect = new Rect(mDelteRect.left, mDelteRect.top, mDelteRect.left + iconWidth + padding, mDelteRect.top + iconHeight + padding);
+        deleteIcon.setBounds(mDelteRect);
     }
 
     @Override
