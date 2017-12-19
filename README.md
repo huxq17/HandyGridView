@@ -5,7 +5,7 @@
 HandyGridView本质上是一个GridView，所以你也可以当成普通的GridView来使用，HandyGridView继承了GridView并在此之上添加了item拖动和交换，绘制图文等功能。
 由于只是一个GridView，所以性能比目前其他大部分解决方案都要好。
 
-HandyGridview is a high-performance drag and drop gridview, it extends GridView, you can drag drop gridview item to sort the labels,and draw something on the gridview. Just use the HandyGridview like a GridView.
+HandyGridView is a high-performance drag and drop GridView, it extends GridView, you can drag drop GridView item to sort the labels,and draw something on the GridView. Just use the HandyGridView like a GridView.
 
 ---
 
