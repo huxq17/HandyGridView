@@ -91,20 +91,8 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
                 if (visibleItemCount != 0) {
-                    if (mFirstVisibleFirstItem == -1) {
-                        mFirstVisibleFirstItem = firstVisibleItem;
-                        onGridViewVisible();
-                    } else {
-                        int rowLine = firstVisibleItem / mColumnsNum;
-                        View firstChild = getChildAt(0);
-                        mFirstLeft = getListPaddingLeft();
-                        mFirstTop = firstChild.getTop();
-                        mColumnWidth = firstChild.getWidth();
-                        mRowHeight = firstChild.getHeight();
-                        int scrollY = mFirstTop - rowLine * (mVerticalSpacing + mRowHeight);
-                        mScrollY = scrollY;
-                        mFirstVisibleFirstItem = firstVisibleItem;
-                    }
+                    mFirstVisibleFirstItem = firstVisibleItem;
+                    getBasicValues(firstVisibleItem);
                     if (mOnScrollListener != null) {
                         mOnScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
                     }
@@ -113,8 +101,14 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
         });
     }
 
-    public void onGridViewVisible() {
-//        mColumnsNum = getNumColumns();
+    private void getBasicValues(int firstVisibleItem) {
+        View firstChild = getChildAt(0);
+        mFirstLeft = getListPaddingLeft();
+        mFirstTop = firstChild.getTop();
+        mColumnWidth = firstChild.getWidth();
+        mRowHeight = firstChild.getHeight();
+        int rowLine = firstVisibleItem / mColumnsNum;
+        mScrollY = mFirstTop - rowLine * (mVerticalSpacing + mRowHeight);
     }
 
     @Override
@@ -238,11 +232,6 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
         return mDraggedPosition;
     }
 
-    @Override
-    protected boolean addViewInLayout(View child, int index, ViewGroup.LayoutParams params, boolean preventRequestLayout) {
-        return super.addViewInLayout(child, index, params, preventRequestLayout);
-    }
-
     private void refreshChildren() {
         int childCount = getChildCount();
         clearAllChildren();
@@ -254,6 +243,9 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
+//        if (getChildCount() > 0) {
+//            getBasicValues(getFirstVisiblePosition());
+//        }
         if (mDraggedView != null) {
             refreshChildren();
             View draggedView = super.getChildAt(mDraggedPosition - mFirstVisibleFirstItem);
@@ -399,15 +391,14 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
                             mDraggedView.setPressed(false);
                         }
                         mShouldMove = true;
-                    } else {
-                        mLastMotionX = ev.getRawX();
-                        mLastMotionY = ev.getRawY();
                     }
                     if (mShouldMove) {
                         correctDraggedViewLocation(deltaX, deltaY);
                         swapItemIfNeed(ev);
                         scrollIfNeeded();
                     }
+                    mLastMotionX = ev.getRawX();
+                    mLastMotionY = ev.getRawY();
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -427,7 +418,8 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
         if (isTouchMode()) {
             handled = true;
         }
-        return handled ? handled : super.onTouchEvent(ev);
+        boolean result = handled ? handled : super.onTouchEvent(ev);
+        return result;
     }
 
     @Override
@@ -646,8 +638,8 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
         fromChild.moveTo(from, to);
         moveViewToPosition(to, fromView);
         dispatchItemMoved(from, to);
-        removeViewInLayout(fromView);
-        addViewInLayout(fromView, to - getFirstVisiblePosition(), fromView.getLayoutParams(), true);
+        detachViewFromParent(fromView);
+        super.attachViewToParent(fromView,to - getFirstVisiblePosition(),fromView.getLayoutParams());
     }
 
     private void dispatchItemMoved(int from, int to) {

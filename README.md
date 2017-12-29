@@ -20,7 +20,7 @@ HandyGridView is a high-performance drag and drop GridView, it extends GridView,
 
 ```groovy
 dependencies {
-   compile 'com.huxq17.handygridview:handygridview:1.0.0'
+   compile 'com.huxq17.handygridview:handygridview:1.1.0'
 
 }
 ```
@@ -110,12 +110,18 @@ You can draw something on HandyGridView, the usage is as follows:
 
 以上就是主要的用法了,[更多的用法可以参考example](https://github.com/huxq17/HandyGridView/blob/master/app/src/main/java/com/handygridview/example/MainActivity.java).
 
-The above is the main usage,[click to get more  usage](https://github.com/huxq17/HandyGridView/blob/master/app/src/main/java/com/handygridview/example/MainActivity.java).
+The above is the main usage,[click to get more](https://github.com/huxq17/HandyGridView/blob/master/app/src/main/java/com/handygridview/example/MainActivity.java).
 
 
 
 ---
 
+### 更新日志：<br/>
+
+    2017-12-29：
+    1.解决某些小米手机上item拖动交换时会闪烁的问题,更新到1.1.0。
+
+---
 ### LICENSE
 
 [Apache License 2.0](LICENSE)
