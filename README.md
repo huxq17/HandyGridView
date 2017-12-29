@@ -116,7 +116,7 @@ The above is the main usage,[click to get more](https://github.com/huxq17/HandyG
 
 ---
 
-### 更新日志：<br/>
+### 更新日志<br/>
 
     2017-12-29：
     1.解决某些小米手机上item拖动交换时会闪烁的问题,更新到1.1.0。
