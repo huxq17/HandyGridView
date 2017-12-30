@@ -4,10 +4,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.ViewTreeObserver;
 
 import com.handygridview.example.DensityUtil;
 import com.handygridview.example.R;
@@ -26,27 +24,14 @@ public class TagView extends android.support.v7.widget.AppCompatTextView {
         super(context);
 //        int id = context.getResources().getIdentifier("ic_delete", "drawable", context.getPackageName());
         deleteIcon = context.getResources().getDrawable(R.drawable.ic_delete);
-        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                setDeleteBounds();
-                removeViewTreeObserver(this);
-            }
-        });
-    }
-
-    @SuppressWarnings("deprecation")
-    public void removeViewTreeObserver(ViewTreeObserver.OnGlobalLayoutListener listener) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-            getViewTreeObserver().removeGlobalOnLayoutListener(listener);
-        } else {
-            getViewTreeObserver().removeOnGlobalLayoutListener(listener);
-        }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        if (mAssumeDelteRect == null) {
+            setDeleteBounds();
+        }
         if (showIcon) {
             deleteIcon.draw(canvas);
         }
