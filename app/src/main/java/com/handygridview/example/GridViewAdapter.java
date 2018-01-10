@@ -2,10 +2,12 @@ package com.handygridview.example;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.GridView;
 
 import com.handygridview.example.widget.TagView;
 import com.huxq17.handygridview.scrollrunner.OnItemMovedListener;
@@ -22,6 +24,7 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener,
         this.mDatas.addAll(dataList);
     }
 
+    private GridView mGridView;
     private boolean inEditMode = false;
 
     public void setData(List<String> dataList) {
@@ -52,7 +55,10 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener,
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-       TagView textView;
+        if (mGridView == null) {
+            mGridView = (GridView) parent;
+        }
+        TagView textView;
         if (convertView == null) {
             textView = new TagView(context);
             convertView = textView;
@@ -71,7 +77,7 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener,
             textView.showDeleteIcon(false);
         }
         textView.setText(getItem(position));
-        textView.setOnTagDeleteListener(position, this);
+        textView.setOnTagDeleteListener(this);
         return convertView;
     }
 
@@ -91,7 +97,10 @@ public class GridViewAdapter extends BaseAdapter implements OnItemMovedListener,
     }
 
     @Override
-    public void onDelete(int position) {
+    public void onDelete(View deleteView) {
+        int index = mGridView.indexOfChild(deleteView);
+        if (index <= 0) return;
+        int position = index + mGridView.getFirstVisiblePosition();
         mDatas.remove(position);
         notifyDataSetChanged();
     }
