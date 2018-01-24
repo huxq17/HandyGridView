@@ -78,12 +78,14 @@ publishing {
     }
 }
 
-def getBintrayUserProperty() {
-    return hasProperty('BINTRAY_USER') ? BINTRAY_USER : ""
+def getBintrayUserProperty(Properties properties) {
+    return properties.get('BINTRAY_USER', "")
+//    return hasProperty('BINTRAY_USER') ? BINTRAY_USER : ""
 }
 
-def getBintrayApiKeyProperty() {
-    return hasProperty('BINTRAY_APIKEY') ? BINTRAY_APIKEY : ""
+def getBintrayApiKeyProperty(Properties properties) {
+    return properties.get('BINTRAY_APIKEY', "")
+//    return hasProperty('BINTRAY_APIKEY') ? BINTRAY_APIKEY : ""
 }
 
 def getGpgPassphraseProperty() {
@@ -100,8 +102,13 @@ def getUserPasswordProperty() {
 
 // gradle bintrayUpload
 bintray {
-    user = getBintrayUserProperty()
-    key = getBintrayApiKeyProperty()
+    Properties properties = new Properties()
+    File propertyFile = new File(rootDir.getAbsolutePath() + "/local.properties")
+    properties.load(propertyFile.newDataInputStream())
+
+    user = getBintrayUserProperty(properties)
+    key = getBintrayApiKeyProperty(properties)
+
     def passphrase = getGpgPassphraseProperty()
     def userToken = getUserTokenProperty()
     def userPassword = getUserPasswordProperty()
@@ -128,7 +135,8 @@ bintray {
                 passphrase = 'passphrase' //Optional. The passphrase for GPG signing'
             }
             mavenCentralSync {
-                sync = false //Optional (true by default). Determines whether to sync the version to Maven Central.
+                sync = false
+                //Optional (true by default). Determines whether to sync the version to Maven Central.
                 user = userToken //OSS user token
                 password = userPassword //OSS user password
                 close = '1'
