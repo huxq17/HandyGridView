@@ -22,6 +22,6 @@ dependencies {
     api fileTree(include: ['*.jar'], dir: 'libs')
     api 'com.android.support:appcompat-v7:27.+'
 //    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    api project(':handygridview')
-//    compile 'com.huxq17.handygridview:handygridview:1.1.0'
+//    api project(':handygridview')
+    compile 'com.huxq17.handygridview:handygridview:1.2.0'
 }
