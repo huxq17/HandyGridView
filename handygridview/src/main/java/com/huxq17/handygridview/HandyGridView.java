@@ -639,7 +639,7 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
         moveViewToPosition(to, fromView);
         dispatchItemMoved(from, to);
         detachViewFromParent(fromView);
-        super.attachViewToParent(fromView,to - getFirstVisiblePosition(),fromView.getLayoutParams());
+        super.attachViewToParent(fromView, to - getFirstVisiblePosition(), fromView.getLayoutParams());
     }
 
     private void dispatchItemMoved(int from, int to) {
@@ -704,8 +704,11 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
         return super.getChildCount();
     }
 
-
+    @Override
     public int pointToPosition(int x, int y) {
+        if (mColumnWidth + mHorizontalSpacing <= 0 || mRowHeight + mVerticalSpacing == 0) {
+            return INVALID_POSITION;
+        }
         int m = (x - mFirstLeft) / (mColumnWidth + mHorizontalSpacing);
         int n = (y - mFirstTop) / (mRowHeight + mVerticalSpacing);
         int right = mFirstLeft + (m + 1) * (mColumnWidth + mHorizontalSpacing);
@@ -720,7 +723,7 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
     }
 
     private void log(String msg) {
-        Log.e("moveongridview", msg);
+        Log.e("moveOnGridView", msg);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -751,9 +754,9 @@ public class HandyGridView extends GridView implements AdapterView.OnItemLongCli
     }
 
     private void releaseDraggedView() {
-        int[] destation = getLeftAndTopForPosition(mDraggedPosition);
-        int offsetX = destation[0] - mDraggedView.getLeft();
-        int offsetY = destation[1] - mDraggedView.getTop();
+        int[] destination = getLeftAndTopForPosition(mDraggedPosition);
+        int offsetX = destination[0] - mDraggedView.getLeft();
+        int offsetY = destination[1] - mDraggedView.getTop();
         mDraggedView.offsetLeftAndRight(offsetX);
         mDraggedView.offsetTopAndBottom(offsetY);
         dispatchItemReleased();
