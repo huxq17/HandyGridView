@@ -20,7 +20,7 @@ HandyGridView is a high-performance drag and drop GridView, it extends GridView,
 
 ```groovy
 dependencies {
-   compile 'com.huxq17.handygridview:handygridview:1.1.0'
+   compile 'com.huxq17.handygridview:handygridview:1.2.0'
 
 }
 ```
@@ -117,9 +117,11 @@ The above is the main usage,[click to get more](https://github.com/huxq17/HandyG
 ---
 
 ### 更新日志<br/>
+    2018-8-29：
+    1.解决HandyGridView在没有item并且horizontalSpacing为0dp或者没有设置时触摸会挂掉的问题
 
     2017-12-29：
-    1.解决某些小米手机上item拖动交换时会闪烁的问题,更新到1.1.0。
+    1.解决某些小米手机上item拖动交换时会闪烁的问题,更新到1.1.0
 
 ---
 ### LICENSE

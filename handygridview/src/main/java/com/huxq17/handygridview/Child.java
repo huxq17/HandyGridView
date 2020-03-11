@@ -3,7 +3,6 @@ package com.huxq17.handygridview;
 import android.content.Context;
 import android.view.View;
 
-import com.huxq17.handygridview.HandyGridView;
 import com.huxq17.handygridview.scrollrunner.ICarrier;
 import com.huxq17.handygridview.scrollrunner.ScrollRunner;
 
@@ -21,6 +20,11 @@ public class Child implements ICarrier {
         mRunner = new ScrollRunner(this);
     }
 
+    public void cancel() {
+        mRunner.cancel();
+        hasNext = false;
+    }
+
     public void setParent(HandyGridView parent) {
         this.parent = parent;
     }
@@ -32,11 +36,11 @@ public class Child implements ICarrier {
     public void moveTo(int from, int to) {
         this.from = from;
         this.to = to;
-        int[] froms = parent.getLeftAndTopForPosition(from);
-        int[] tos = parent.getLeftAndTopForPosition(to);
+        int[] start = parent.getLeftAndTopForPosition(from);
+        int[] end = parent.getLeftAndTopForPosition(to);
         if (!mRunner.isRunning()) {
-            int offsetX = tos[0] - froms[0];
-            int offsetY = tos[1] - froms[1];
+            int offsetX = end[0] - start[0];
+            int offsetY = end[1] - start[1];
             move(offsetX, offsetY);
         } else {
             hasNext = true;
@@ -45,14 +49,14 @@ public class Child implements ICarrier {
 
     @Override
     public void onDone() {
-        int[] froms = new int[]{view.getLeft(), view.getTop()};
-        from = parent.pointToPosition(froms[0], froms[1]);
+        int[] start = new int[]{view.getLeft(), view.getTop()};
+        from = parent.pointToPosition(start[0], start[1]);
 
-        int[] tos = parent.getLeftAndTopForPosition(to);
+        int[] end = parent.getLeftAndTopForPosition(to);
         if (hasNext) {
             if (from != to) {
-                int offsetX = tos[0] - froms[0];
-                int offsetY = tos[1] - froms[1];
+                int offsetX = end[0] - start[0];
+                int offsetY = end[1] - start[1];
                 move(offsetX, offsetY);
             }
             hasNext = false;

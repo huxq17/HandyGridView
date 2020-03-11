@@ -6,6 +6,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.handygridview.example.DensityUtil;
 import com.handygridview.example.R;
@@ -18,7 +19,6 @@ public class TagView extends android.support.v7.widget.AppCompatTextView {
     private boolean showIcon = true;
     private Rect mDelteRect;
     private Rect mAssumeDelteRect;
-    private int mPosition;
 
     public TagView(Context context) {
         super(context);
@@ -66,7 +66,7 @@ public class TagView extends android.support.v7.widget.AppCompatTextView {
             case MotionEvent.ACTION_UP:
                 if (contains && showIcon) {
                     if (mListener != null) {
-                        mListener.onDelete(mPosition);
+                        mListener.onDelete(this);
                     }
                     return true;
                 }
@@ -86,18 +86,17 @@ public class TagView extends android.support.v7.widget.AppCompatTextView {
 
     private OnTagDeleteListener mListener;
 
-    public void setOnTagDeleteListener(int position, OnTagDeleteListener listener) {
+    public void setOnTagDeleteListener(OnTagDeleteListener listener) {
         mListener = listener;
-        mPosition = position;
     }
 
     public interface OnTagDeleteListener {
         /**
-         * Delete at position.
+         * Delete view.
          *
-         * @param position
+         * @param deleteView
          */
-        void onDelete(int position);
+        void onDelete(View deleteView);
     }
 //    @Override
 //    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
